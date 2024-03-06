@@ -129,15 +129,6 @@ def count_taxes(directory):
     for dividend in dividends:
         dividend |= get_usd_pln_ratio_for_date(dividend[F_PAY_DATE])
 
-    print('JSON data:')
-    print(json.dumps(dividends))
-    print()
-
-    print(f'DIVIDENDS GROSS: ${sum(div[F_GROSS_DIVIDENT] for div in dividends):.2f}')
-    print(f'DIVIDENDS TAX PAID: ${sum(div[F_TAX] for div in dividends):.2f}')
-    print(f'DIVIDENDS NET: ${sum(div[F_NET_DIVIDENT] for div in dividends):.2f}')
-    print()
-
     div_gross_pln = sum(div[F_GROSS_DIVIDENT] * div[F_RATIO_VALUE] for div in dividends)
     div_proper_tax_pln = div_gross_pln * TAX_PL
     div_paid_tax_pln = sum(div[F_TAX] * div[F_RATIO_VALUE] for div in dividends)

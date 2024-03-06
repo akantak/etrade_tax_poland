@@ -6,17 +6,10 @@ based on multiple E*Trade statements.
 ## Example output
 
 ```txt
-JSON data:
-[{"pay_date": "03/01/2023", "gross_dividend": 96.36, "tax": 14.45, "net_dividend": 81.91, "ratio_date": "2023-02-24", "ratio_value": 4.463}, {"pay_date": "06/01/2023", "gross_dividend": 69.0, "tax": 10.35, "net_dividend": 58.65, "ratio_date": "2023-05-29", "ratio_value": 4.2234}, {"pay_date": "09/01/2023", "gross_dividend": 70.13, "tax": 10.52, "net_dividend": 59.61, "ratio_date": "2023-08-29", "ratio_value": 4.1341}, {"pay_date": "12/1/2023", "gross_dividend": 94.25, "tax": 14.14, "net_dividend": 80.22, "ratio_date": "2023-11-28", "ratio_value": 3.975}]
-
-DIVIDENDS GROSS: $329.74
-DIVIDENDS TAX PAID: $49.46
-DIVIDENDS NET: $280.39
-
-DIVIDENDS GROSS: 1386.04 zł
-DIVIDENDS PROPER TAX: 263.35 zł
-DIVIDENDS PAID TAX: 207.90 zł
-DIVIDENDS DUE TAX: 55.45 zł
+DIVIDENDS GROSS: 1385.48 zł
+DIVIDENDS PROPER TAX: 263.24 zł
+DIVIDENDS PAID TAX: 207.82 zł
+DIVIDENDS DUE TAX: 55.42 zł
 ```
 
 ## Usage
