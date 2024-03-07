@@ -19,12 +19,12 @@ NBP_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/usd/{}/?format=json'
 class Dividend:
     """Keep all dividend data in an object."""
 
-    def __init__(self, pay_date, gross_dividend, tax, net_dividend):
+    def __init__(self, pay_date, gross, tax, net):
         """Initialize an object."""
         self.pay_date = datetime.datetime.strptime(pay_date, DATE_FORMAT)
-        self.usd_gross_dividend = float(gross_dividend)
+        self.usd_gross = float(gross)
         self.usd_tax = float(tax)
-        self.usd_net_dividend = float(net_dividend)
+        self.usd_net = float(net)
         self.ratio_date = ''
         self.ratio_value = 0
         self.pln_gross = 0
@@ -32,23 +32,44 @@ class Dividend:
         self.pln_tax_paid = 0
         self.pln_tax_due = 0
 
-    def __str__(self):
-        """Stringify class object."""
-        return '\t'.join([
+    def get_csved_object(self):
+        """Csved class object."""
+        return ','.join([
             self.pay_date.strftime(DATE_FORMAT),
+            f'{self.usd_gross:.2f}',
+            f'{self.usd_tax:.2f}',
+            f'{self.usd_net:.2f}',
+            self.ratio_date.strftime(DATE_FORMAT),
+            f'{self.ratio_value:.2f}',
             f'{self.pln_gross:.2f}',
             f'{self.pln_tax_payable:.2f}',
             f'{self.pln_tax_paid:.2f}',
             f'{self.pln_tax_due:.2f}',
         ])
 
+    @staticmethod
+    def get_table_header():
+        """Return table header for CSVed objects."""
+        return ','.join([
+            'VEST_DATE',
+            'USD_GROSS',
+            'USD_TAX_PAID',
+            'USD_NET',
+            'RATIO_DATE',
+            'RATIO_VALUE',
+            'PLN_GROSS',
+            'PLN_TAX_TOTAL',
+            'PLN_TAX_PAID',
+            'PLN_TAX_DUE',
+        ])
+
     def insert_currencies_ratio(self, ratio_date, ratio_value):
         """Insert currencies ratio and calculate dependent variables."""
         self.ratio_date = ratio_date
         self.ratio_value = ratio_value
-        self.pln_gross = self.usd_gross_dividend * ratio_value
-        self.pln_tax_payable = self.pln_gross * TAX_PL
-        self.pln_tax_paid = self.usd_tax * ratio_value
+        self.pln_gross = round(self.usd_gross * ratio_value, 2)
+        self.pln_tax_payable = round(self.pln_gross * TAX_PL, 2)
+        self.pln_tax_paid = round(self.usd_tax * ratio_value, 2)
         self.pln_tax_due = self.pln_tax_payable - self.pln_tax_paid
 
 
@@ -155,12 +176,16 @@ def count_taxes(directory):
 
     for dividend in dividends:
         dividend.insert_currencies_ratio(*get_usd_pln_ratio_for_date(dividend.pay_date))
-        print(dividend)
 
     print(f'DIVIDENDS GROSS:\t{sum(div.pln_gross for div in dividends):.2f} zł')
     print(f'DIVIDENDS TAX PAYABLE:\t{sum(div.pln_tax_payable for div in dividends):.2f} zł')
     print(f'DIVIDENDS TAX PAID:\t{sum(div.pln_tax_paid for div in dividends):.2f} zł')
     print(f'DIVIDENDS TAX DUE:\t{sum(div.pln_tax_due for div in dividends):.2f} zł')
+
+    with open('dividends.csv', 'w', encoding='utf-8') as file:
+        file.write(f'{Dividend.get_table_header()}\n')
+        for div in dividends:
+            file.write(f'{div.get_csved_object()}\n')
 
 
 if len(sys.argv) > 1:

@@ -12,6 +12,8 @@ DIVIDENDS PAID TAX: 207.82 zł
 DIVIDENDS DUE TAX: 55.42 zł
 ```
 
+This script also creates a `dividends.csv` file with dividents entries one by one.
+
 ## Usage
 
 Prepare a directory with all the statements from E*TRADE to be considered during tax calculation.
