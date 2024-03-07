@@ -2,7 +2,6 @@
 
 import datetime
 import glob
-import json
 import os
 import sys
 from time import sleep
@@ -12,16 +11,45 @@ from pypdf import PdfReader
 import requests
 
 
-F_PAY_DATE = 'pay_date'
-F_GROSS_DIVIDENT = 'gross_dividend'
-F_TAX = 'tax'
-F_NET_DIVIDENT = 'net_dividend'
-
-F_RATIO_DATE = 'ratio_date'
-F_RATIO_VALUE = 'ratio_value'
-
+DATE_FORMAT = '%m/%d/%Y'
 TAX_PL = 0.19
-NBP_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/usd'
+NBP_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/usd/{}/?format=json'
+
+
+class Dividend:
+    """Keep all dividend data in an object."""
+
+    def __init__(self, pay_date, gross_dividend, tax, net_dividend):
+        """Initialize an object."""
+        self.pay_date = datetime.datetime.strptime(pay_date, DATE_FORMAT)
+        self.usd_gross_dividend = float(gross_dividend)
+        self.usd_tax = float(tax)
+        self.usd_net_dividend = float(net_dividend)
+        self.ratio_date = ''
+        self.ratio_value = 0
+        self.pln_gross = 0
+        self.pln_tax_payable = 0
+        self.pln_tax_paid = 0
+        self.pln_tax_due = 0
+
+    def __str__(self):
+        """Stringify class object."""
+        return '\t'.join([
+            self.pay_date.strftime(DATE_FORMAT),
+            f'{self.pln_gross:.2f}',
+            f'{self.pln_tax_payable:.2f}',
+            f'{self.pln_tax_paid:.2f}',
+            f'{self.pln_tax_due:.2f}',
+        ])
+
+    def insert_currencies_ratio(self, ratio_date, ratio_value):
+        """Insert currencies ratio and calculate dependent variables."""
+        self.ratio_date = ratio_date
+        self.ratio_value = ratio_value
+        self.pln_gross = self.usd_gross_dividend * ratio_value
+        self.pln_tax_payable = self.pln_gross * TAX_PL
+        self.pln_tax_paid = self.usd_tax * ratio_value
+        self.pln_tax_due = self.pln_tax_payable - self.pln_tax_paid
 
 
 def get_all_pdf_files(directory):
@@ -39,8 +67,8 @@ def get_text_from_file(filename):
     return text
 
 
-def get_unified_dividends_from_text(text):
-    """Get dividends data from text in unified format."""
+def get_dividend_from_text(text):
+    """Get dividend data from text in an class object."""
     dividend_lines = []
     year_line = ''
     lines = text.split('\n')
@@ -67,12 +95,12 @@ def get_unified_dividends_from_text(text):
         ]
         """
         year = year_line.split()[-1]
-        return {
-            F_PAY_DATE: f'{dividend_lines[0].split()[0]}/{year}',
-            F_GROSS_DIVIDENT: float(dividend_lines[0].split()[-1]),
-            F_TAX: float(dividend_lines[1].split()[-1][1:-1]),
-            F_NET_DIVIDENT: float(dividend_lines[2].split()[-1][1:-1]),
-        }
+        return Dividend(
+            f'{dividend_lines[0].split()[0]}/{year}',
+            dividend_lines[0].split()[-1],
+            dividend_lines[1].split()[-1][1:-1],
+            dividend_lines[2].split()[-1][1:-1],
+        )
     # before 09.2023 doc version
     _ = """
     [
@@ -85,34 +113,33 @@ def get_unified_dividends_from_text(text):
     ]
     """
     date = dividend_lines[0].split()[0]
-    return {
-        F_PAY_DATE: f'{date[:-2]}20{date[-2:]}',
-        F_GROSS_DIVIDENT: float(dividend_lines[3].split()[-1]),
-        F_TAX: float(dividend_lines[3].split()[-2]),
-        F_NET_DIVIDENT: float(dividend_lines[5].split()[-1][1:]),
-    }
+    return Dividend(
+        f'{date[:-2]}20{date[-2:]}',
+        dividend_lines[3].split()[-1],
+        dividend_lines[3].split()[-2],
+        dividend_lines[5].split()[-1][1:],
+    )
 
 
-def get_usd_pln_ratio_for_date(date_str):
+def get_usd_pln_ratio_for_date(date_obj):
     """Find 'day before vestment' USD/PLN ratio."""
-    date_format = '%m/%d/%Y'
-    date_obj = datetime.datetime.strptime(date_str, date_format)
     date_obj -= datetime.timedelta(days=1)
     while True:
         try:
-            req = requests.get(f'{NBP_URL}/{date_obj.strftime("%Y-%m-%d")}/?format=json', timeout=5)
+            req = requests.get(NBP_URL.format(date_obj.strftime('%Y-%m-%d')), timeout=5)
         except Exception:
             print('Failed getting USD/PLN ratio in 5 seconds, retrying after 1 second')
             sleep(1)
             continue
         if req.status_code == 200:
-            return {
-                F_RATIO_DATE: date_obj.strftime('%Y-%m-%d'),
-                F_RATIO_VALUE: req.json()['rates'][0]['mid'],
-            }
+            return (
+                date_obj,
+                req.json()['rates'][0]['mid'],
+            )
         if req.status_code == 404 and req.text == '404 NotFound - Not Found - Brak danych':
             date_obj -= datetime.timedelta(days=1)
         else:
+            print(f'{req.status_code} {req.text}')
             raise Exception('Not handled case during getting USD/PLN ratio')
 
 
@@ -122,28 +149,25 @@ def count_taxes(directory):
     dividends = []
     for filename in files:
         text = get_text_from_file(f'{directory}/{filename}')
-        dividend = get_unified_dividends_from_text(text)
+        dividend = get_dividend_from_text(text)
         if dividend:
             dividends.append(dividend)
 
     for dividend in dividends:
-        dividend |= get_usd_pln_ratio_for_date(dividend[F_PAY_DATE])
+        dividend.insert_currencies_ratio(*get_usd_pln_ratio_for_date(dividend.pay_date))
+        print(dividend)
 
-    div_gross_pln = sum(div[F_GROSS_DIVIDENT] * div[F_RATIO_VALUE] for div in dividends)
-    div_proper_tax_pln = div_gross_pln * TAX_PL
-    div_paid_tax_pln = sum(div[F_TAX] * div[F_RATIO_VALUE] for div in dividends)
-    div_due_tax_pln = div_proper_tax_pln - div_paid_tax_pln
-    print(f'DIVIDENDS GROSS: {div_gross_pln:.2f} zł')
-    print(f'DIVIDENDS PROPER TAX: {div_proper_tax_pln:.2f} zł')
-    print(f'DIVIDENDS PAID TAX: {div_paid_tax_pln:.2f} zł')
-    print(f'DIVIDENDS DUE TAX: {div_due_tax_pln:.2f} zł')
+    print(f'DIVIDENDS GROSS:\t{sum(div.pln_gross for div in dividends):.2f} zł')
+    print(f'DIVIDENDS TAX PAYABLE:\t{sum(div.pln_tax_payable for div in dividends):.2f} zł')
+    print(f'DIVIDENDS TAX PAID:\t{sum(div.pln_tax_paid for div in dividends):.2f} zł')
+    print(f'DIVIDENDS TAX DUE:\t{sum(div.pln_tax_due for div in dividends):.2f} zł')
 
 
 if len(sys.argv) > 1:
-    dir_path = sys.argv[1]
-    if not os.path.isdir(dir_path):
+    DIR_PATH = sys.argv[1]
+    if not os.path.isdir(DIR_PATH):
         print('Provided path is not a directory')
-        exit(1)
-    count_taxes(dir_path)
+        sys.exit(1)
+    count_taxes(DIR_PATH)
 else:
     count_taxes('.')
