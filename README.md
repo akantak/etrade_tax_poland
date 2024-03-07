@@ -12,7 +12,7 @@ DIVIDENDS PAID TAX: 207.82 zł
 DIVIDENDS DUE TAX: 55.42 zł
 ```
 
-This script also creates a `dividends.csv` file with dividents entries one by one.
+This script also creates a `dividends.csv` file with dividends entries one by one.
 
 ## Usage
 
@@ -28,7 +28,7 @@ Install script dependencies:
 python3 -m pip install pypdf requests
 ```
 
-Run the script:
+Run the script providing a directory with statements as a parameter (ex. `/tmp/statements`):
 
 ```bash
 python3 dividends.py /tmp/statements
