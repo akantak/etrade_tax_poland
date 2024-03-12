@@ -118,7 +118,7 @@ class RestrictedStock():
         """Return table header for CSVed objects."""
         return ','.join([
             'VEST_DATE',
-            'SHARES_PURCHASED',
+            'SHARES_RELEASED',
             'USD_GAIN',
             'FILE',
         ])
@@ -231,7 +231,7 @@ def get_trade_from_text(text):
     return trade
 
 
-def process_stocks_docs(directory):
+def process_stock_docs(directory):
     """Process all docs and find stocks data."""
     files = etc.get_all_pdf_files(directory)
     espps = []  # Employee Stock Purchase Plan

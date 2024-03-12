@@ -2,9 +2,9 @@
 import os
 import sys
 
-from dividends import count_dividend_taxes
+from dividends import process_dividend_docs
 
-from stocks import process_stocks_docs
+from stocks import process_stock_docs
 
 
 def all_taxes():
@@ -15,8 +15,8 @@ def all_taxes():
         if not os.path.isdir(dir_path):
             print('Provided path is not a directory')
             sys.exit(1)
-    count_dividend_taxes(dir_path)
-    process_stocks_docs(dir_path)
+    process_dividend_docs(dir_path)
+    process_stock_docs(dir_path)
 
 
 all_taxes()

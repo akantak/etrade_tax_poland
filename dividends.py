@@ -109,7 +109,7 @@ def get_dividends_sum_up_lines(dividends):
     ]
 
 
-def count_dividend_taxes(directory):
+def process_dividend_docs(directory):
     """Count due tax based on statements files in directory."""
     files = etc.get_all_pdf_files(directory)
     dividends = []
