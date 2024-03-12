@@ -37,6 +37,7 @@ In previously indicated directory, there will be created detailed files:
 
 - detailed_dividends.csv
 - detailed_espp.csv
+- detailed_rs.csv
 - detailed_trades.csv
 
 and files with sum ups:
@@ -66,7 +67,7 @@ Those statements can be found on <https://edoc.etrade.com/e/t/onlinedocs/docsear
 
 ## Stocks
 
-Prase stocks purchase/sell documents.
+Parse stocks purchase/sell documents.
 
 ### Stocks calculation methodology
 
@@ -76,10 +77,11 @@ For selling `Employee Stock Purchase Plan (ESPP)`, the purchase price is a tax d
 
 ### Stocks documents
 
-Go to <https://us.etrade.com/etx/sp/stockplan?accountIndex=0&traxui=tsp_portfolios/#/myAccount/benefitHistory>
-open `Employee Stock Purchase Plan (ESPP)`, open an entry to be considered in the calculations,
-select `View Confirmation Of Purchase` and download a pdf with the purchase details.
-That would be file named `getEsppConfirmation.pdf`.
+Go to <https://us.etrade.com/etx/sp/stockplan#/myAccount/stockPlanConfirmations>
+and download all files that should be taken into consideration.
+Those files will be named `getEsppConfirmation.pdf` or `getReleaseConfirmation.pdf`.
+
+### Trades confirmation
 
 To get trade confirmations, go to <https://edoc.etrade.com/e/t/onlinedocs/docsearch?doc_type=cnf>
 and download required confirmations.

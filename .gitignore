@@ -4,10 +4,12 @@ __pycache__
 Brokerage Statement*
 MS_ClientStatements*
 getEsppConfirmation*
+getReleaseConfirmation*
 ETRADE Brokerage Trade Confirmation*
 
 detailed_dividends.csv
 detailed_espp.csv
+detailed_rs.csv
 detailed_trades.csv
 
 sum_dividends.txt

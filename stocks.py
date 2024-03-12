@@ -94,6 +94,36 @@ class EsppStock():
         ])
 
 
+class RestrictedStock():
+    """Contains all data for RS stock vest."""
+
+    def __init__(self):
+        """Init restricted stock object."""
+        self.release_date = datetime.datetime.fromtimestamp(0)
+        self.shares_released = 0
+        self.release_gain = 0.0
+        self.file = ''
+
+    def get_csved_object(self):
+        """Csved class object."""
+        return ','.join([
+            self.release_date.strftime('%d.%m.%Y'),
+            f'{self.shares_released}',
+            f'{self.release_gain:.2f}',
+            self.file,
+        ])
+
+    @staticmethod
+    def get_table_header():
+        """Return table header for CSVed objects."""
+        return ','.join([
+            'VEST_DATE',
+            'SHARES_PURCHASED',
+            'USD_GAIN',
+            'FILE',
+        ])
+
+
 class Stock():
     """Contains sum up data for stock event."""
 
@@ -109,6 +139,10 @@ class Stock():
             self.buy_date = base_object.purchase_date
             self.buy_shares_count = base_object.shares_purchased
             self.buy_tax_deductible = base_object.pln_contribution_net
+        elif isinstance(base_object, RestrictedStock):
+            self.buy_date = base_object.release_date
+            self.buy_shares_count = base_object.shares_released
+            self.buy_tax_deductible = 0.0
         elif isinstance(base_object, Trade):
             self.sale_date = base_object.trade_date
             self.sale_shares_count = base_object.shares_sold
@@ -165,6 +199,22 @@ def get_espp_from_text(text):
     return stock
 
 
+def get_rs_from_text(text):
+    """Find all Restricted Stocks vested data in text."""
+    if 'EMPLOYEE STOCK PLAN RELEASE CONFIRMATION' not in text:
+        return ''
+    lines = text.split('\n')
+    rest = RestrictedStock()
+    for line in lines:
+        if 'Release Date' in line:
+            rest.release_date = datetime.datetime.strptime(line.split()[-1], '%m-%d-%Y')
+        if 'Shares Released' in line and len(line.split()) == 3:
+            rest.shares_released = int(float(line.split()[-1]))
+        if 'Total Gain' in line:
+            rest.release_gain = cash_to_float(line.split()[-1][1:])
+    return rest
+
+
 def get_trade_from_text(text):
     """Find all trade data in text."""
     if 'TRADECONFIRMATION' not in text:
@@ -184,21 +234,28 @@ def get_trade_from_text(text):
 def process_stocks_docs(directory):
     """Process all docs and find stocks data."""
     files = etc.get_all_pdf_files(directory)
-    espps = []
-    trades = []
+    espps = []  # Employee Stock Purchase Plan
+    rests = []  # Restricted Stock
+    trades = []  # stocks sell events
     for filename in files:
         full_path = f'{directory}/{filename}'
         text = etc.get_text_from_file(full_path)
         espp = get_espp_from_text(text)
+        rest = get_rs_from_text(text)
         trade = get_trade_from_text(text)
         if espp:
             espp.file = full_path
             espps.append(espp)
+        if rest:
+            rest.file = full_path
+            rests.append(rest)
         if trade:
             trade.file = full_path
             trade.insert_currencies_ratio(*etc.get_usd_pln_ratio(trade.trade_date))
             trades.append(trade)
 
     etc.save_csv('detailed_espp.csv', EsppStock.get_table_header(), espps)
+    etc.save_csv('detailed_rs.csv', RestrictedStock.get_table_header(), rests)
     etc.save_csv('detailed_trades.csv', Trade.get_table_header(), trades)
-    etc.save_csv('sum_stocks.csv', Stock.get_table_header(), [Stock(x) for x in espps + trades])
+    stocks_events = [Stock(x) for x in espps + rests + trades]
+    etc.save_csv('sum_stocks.csv', Stock.get_table_header(), stocks_events)
