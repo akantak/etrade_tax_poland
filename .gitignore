@@ -1,3 +1,14 @@
+.vscode
+__pycache__
+
 Brokerage Statement*
 MS_ClientStatements*
-dividends.csv
+getEsppConfirmation*
+ETRADE Brokerage Trade Confirmation*
+
+detailed_dividends.csv
+detailed_espp.csv
+detailed_trades.csv
+
+sum_dividends.txt
+sum_stocks.csv
