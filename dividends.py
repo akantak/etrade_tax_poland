@@ -98,6 +98,8 @@ def get_dividend_from_text(text):
 
 def get_dividends_sum_up_lines(dividends):
     """Extract sum up lines from dividends list."""
+    if not dividends:
+        return []
     flat_rate_tax = sum(div.flat_rate_tax for div in dividends)
     tax_paid = sum(div.pln_tax_paid for div in dividends)
     tax_due = sum(div.pln_tax_due for div in dividends)

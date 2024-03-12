@@ -55,6 +55,8 @@ def save_csv(filename, header, objects):
 
     Objects have to implement .get_csved_object() method
     """
+    if not objects:
+        return
     with open(filename, 'w', encoding='utf-8') as file:
         file.write(f'{header}\n')
         for obj in objects:
@@ -63,6 +65,8 @@ def save_csv(filename, header, objects):
 
 def save_txt(filename, lines_list):
     """Save lines to a txt file."""
+    if not lines_list:
+        return
     with open(filename, 'w', encoding='utf-8') as file:
         for line in lines_list:
             file.write(f'{line}\n')
