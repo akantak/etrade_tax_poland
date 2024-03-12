@@ -60,8 +60,8 @@ The amounts in USD have to be converted with the NBP ratio from the day before g
 ### Dividends documents
 
 Prepare a directory with all the statements from E*TRADE to be considered during tax calculation.
-Those statements are named like: `Brokerage Statement - XXXXX4108 - 202301.pdf`
-or `MS_ClientStatements_4108_202309.pdf`. Multiple files allowed.
+Those statements are named like: `Brokerage Statement (...).pdf`
+or `MS_ClientStatements_(...).pdf`. Multiple files allowed.
 
 Those statements can be found on <https://edoc.etrade.com/e/t/onlinedocs/docsearch?doc_type=stmt>.
 
@@ -85,3 +85,4 @@ Those files will be named `getEsppConfirmation.pdf` or `getReleaseConfirmation.p
 
 To get trade confirmations, go to <https://edoc.etrade.com/e/t/onlinedocs/docsearch?doc_type=cnf>
 and download required confirmations.
+Those files will be named like `ETRADE Brokerage Trade Confirmation (...).pdf`.
