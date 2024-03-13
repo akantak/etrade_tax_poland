@@ -38,11 +38,12 @@ In previously indicated directory, there will be created detailed files:
 - detailed_dividends.csv
 - detailed_espp.csv
 - detailed_rs.csv
+- detailed_stocks_all.csv
 - detailed_trades.csv
 
 and files with sum ups:
 
-- sum_dividends.txt
+- sum_dividends.csv
 - sum_stocks.csv
 
 ## Dividends

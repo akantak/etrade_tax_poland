@@ -57,3 +57,12 @@ def save_csv(filename, header, lines):
         file.write(f'{header}\n')
         for line in lines:
             file.write(f'{line}\n')
+
+
+def sum_file_header():
+    """Return sum csv file header."""
+    return ','.join([
+        'NAME',
+        'VALUE',
+        'PIT_FIELD',
+    ])

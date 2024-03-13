@@ -231,6 +231,27 @@ def trade_from_text(text):
     return trade
 
 
+def stocks_sum_csved(stocks):
+    """Extract sum up lines from stocks list."""
+    if not stocks:
+        return []
+
+    other_income = sum(s.sale_income for s in stocks)
+    tax_deductible = sum(s.buy_tax_deductible for s in stocks)
+    profit = other_income - tax_deductible
+    rounded_profit = int(round(profit, 0))
+    tax_base = rounded_profit * etc.TAX_PL
+    tax_rounded = int(round(tax_base, 0))
+    return [
+        f'other income,{other_income:.2f},PIT-38/C/22&24',
+        f'tax deductible,{tax_deductible:.2f},PIT-38/C/23&25',
+        f'profit,{profit:.2f},PIT-38/C/26',
+        f'profit_rounded,{rounded_profit},PIT-38/C/29',
+        f'tax_base,{tax_base:.2f},PIT-38/C/31',
+        f'tax_rounded,{tax_rounded},PIT-38/C/33',
+    ]
+
+
 def process_stock_docs(directory):
     """Process all docs and find stocks data."""
     files = etc.pdfs_in_dir(directory)
@@ -260,4 +281,5 @@ def process_stock_docs(directory):
     etc.save_csv('detailed_espp.csv', EsppStock.csv_header(), [e.csved() for e in espps])
     etc.save_csv('detailed_rs.csv', RestrictedStock.csv_header(), [r.csved() for r in rests])
     etc.save_csv('detailed_trades.csv', Trade.csv_header(), [t.csved() for t in trades])
-    etc.save_csv('sum_stocks.csv', StockEvent.csv_header(), [s.csved() for s in ses])
+    etc.save_csv('detailed_stocks_all.csv', StockEvent.csv_header(), [s.csved() for s in ses])
+    etc.save_csv('sum_stocks.csv', etc.sum_file_header(), stocks_sum_csved(ses))
