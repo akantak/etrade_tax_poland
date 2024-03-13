@@ -12,13 +12,13 @@ NBP_URL = 'https://api.nbp.pl/api/exchangerates/rates/a/usd/{}/?format=json'
 TAX_PL = 0.19
 
 
-def get_all_pdf_files(directory):
+def pdfs_in_dir(directory):
     """Get all PDF statements files."""
     os.chdir(directory)
     return glob.glob('*.pdf')
 
 
-def get_text_from_file(filename):
+def file_to_text(filename):
     """Parse PDF file to text only."""
     reader = PdfReader(filename)
     text = ''
@@ -27,13 +27,13 @@ def get_text_from_file(filename):
     return text
 
 
-def get_usd_pln_ratio(date_obj):
+def date_to_usd_pln(date_obj):
     """Find 'day before vestment' USD/PLN ratio."""
     date_obj -= datetime.timedelta(days=1)
     while True:
         try:
             req = requests.get(NBP_URL.format(date_obj.strftime('%Y-%m-%d')), timeout=5)
-        except Exception:
+        except requests.exceptions.ConnectTimeout:
             print('Failed getting USD/PLN ratio in 5 seconds, retrying after 1 second')
             sleep(1)
             continue
@@ -46,27 +46,14 @@ def get_usd_pln_ratio(date_obj):
             date_obj -= datetime.timedelta(days=1)
         else:
             print(f'{req.status_code} {req.text}')
-            raise Exception('Not handled case during getting USD/PLN ratio')
+            raise NotImplementedError('Not handled case during getting USD/PLN ratio')
 
 
-def save_csv(filename, header, objects):
-    """
-    Save header and objects to a csv file.
-
-    Objects have to implement .get_csved_object() method
-    """
-    if not objects:
+def save_csv(filename, header, lines):
+    """Save header and lines to a csv file."""
+    if not lines:
         return
     with open(filename, 'w', encoding='utf-8') as file:
         file.write(f'{header}\n')
-        for obj in objects:
-            file.write(f'{obj.get_csved_object()}\n')
-
-
-def save_txt(filename, lines_list):
-    """Save lines to a txt file."""
-    if not lines_list:
-        return
-    with open(filename, 'w', encoding='utf-8') as file:
-        for line in lines_list:
+        for line in lines:
             file.write(f'{line}\n')

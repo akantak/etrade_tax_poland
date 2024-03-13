@@ -18,7 +18,7 @@ class Trade():
         self.pln_income = 0.0
         self.file = ''
 
-    def get_csved_object(self):
+    def csved(self):
         """Csved class object."""
         return ','.join([
             self.trade_date.strftime('%d.%m.%Y'),
@@ -31,7 +31,7 @@ class Trade():
         ])
 
     @staticmethod
-    def get_table_header():
+    def csv_header():
         """Return table header for CSVed objects."""
         return ','.join([
             'TRADE_DATE',
@@ -68,7 +68,7 @@ class EsppStock():
         refund = round(self.usd_contribution_refund / self.vest_day_ratio, 2)
         self.pln_contribution_net = self.pln_contribution_gross - refund
 
-    def get_csved_object(self):
+    def csved(self):
         """Csved class object."""
         return ','.join([
             self.purchase_date.strftime('%d.%m.%Y'),
@@ -81,7 +81,7 @@ class EsppStock():
         ])
 
     @staticmethod
-    def get_table_header():
+    def csv_header():
         """Return table header for CSVed objects."""
         return ','.join([
             'VEST_DATE',
@@ -104,7 +104,7 @@ class RestrictedStock():
         self.release_gain = 0.0
         self.file = ''
 
-    def get_csved_object(self):
+    def csved(self):
         """Csved class object."""
         return ','.join([
             self.release_date.strftime('%d.%m.%Y'),
@@ -114,7 +114,7 @@ class RestrictedStock():
         ])
 
     @staticmethod
-    def get_table_header():
+    def csv_header():
         """Return table header for CSVed objects."""
         return ','.join([
             'VEST_DATE',
@@ -124,7 +124,7 @@ class RestrictedStock():
         ])
 
 
-class Stock():
+class StockEvent():
     """Contains sum up data for stock event."""
 
     def __init__(self, base_object):
@@ -148,7 +148,7 @@ class Stock():
             self.sale_shares_count = base_object.shares_sold
             self.sale_income = base_object.pln_income
 
-    def get_csved_object(self):
+    def csved(self):
         """Csved class object."""
         return ','.join([
             self.buy_date.strftime('%d.%m.%Y') if self.buy_date else '',
@@ -160,7 +160,7 @@ class Stock():
         ])
 
     @staticmethod
-    def get_table_header():
+    def csv_header():
         """Return table header for CSVed objects."""
         return ','.join([
             'BUY_DATE',
@@ -177,7 +177,7 @@ def cash_to_float(str_number):
     return float(str_number.replace(',', ''))
 
 
-def get_espp_from_text(text):
+def espp_from_text(text):
     """Find all ESPP bought stocks data in text."""
     if 'EMPLOYEE STOCK PLAN PURCHASE CONFIRMATION' not in text:
         return ''
@@ -199,7 +199,7 @@ def get_espp_from_text(text):
     return stock
 
 
-def get_rs_from_text(text):
+def rs_from_text(text):
     """Find all Restricted Stocks vested data in text."""
     if 'EMPLOYEE STOCK PLAN RELEASE CONFIRMATION' not in text:
         return ''
@@ -215,7 +215,7 @@ def get_rs_from_text(text):
     return rest
 
 
-def get_trade_from_text(text):
+def trade_from_text(text):
     """Find all trade data in text."""
     if 'TRADECONFIRMATION' not in text:
         return ''
@@ -233,16 +233,17 @@ def get_trade_from_text(text):
 
 def process_stock_docs(directory):
     """Process all docs and find stocks data."""
-    files = etc.get_all_pdf_files(directory)
+    files = etc.pdfs_in_dir(directory)
     espps = []  # Employee Stock Purchase Plan
     rests = []  # Restricted Stock
     trades = []  # stocks sell events
+
     for filename in files:
         full_path = f'{directory}/{filename}'
-        text = etc.get_text_from_file(full_path)
-        espp = get_espp_from_text(text)
-        rest = get_rs_from_text(text)
-        trade = get_trade_from_text(text)
+        text = etc.file_to_text(full_path)
+        espp = espp_from_text(text)
+        rest = rs_from_text(text)
+        trade = trade_from_text(text)
         if espp:
             espp.file = full_path
             espps.append(espp)
@@ -251,11 +252,12 @@ def process_stock_docs(directory):
             rests.append(rest)
         if trade:
             trade.file = full_path
-            trade.insert_currencies_ratio(*etc.get_usd_pln_ratio(trade.trade_date))
+            trade.insert_currencies_ratio(*etc.date_to_usd_pln(trade.trade_date))
             trades.append(trade)
 
-    etc.save_csv('detailed_espp.csv', EsppStock.get_table_header(), espps)
-    etc.save_csv('detailed_rs.csv', RestrictedStock.get_table_header(), rests)
-    etc.save_csv('detailed_trades.csv', Trade.get_table_header(), trades)
-    stocks_events = [Stock(x) for x in espps + rests + trades]
-    etc.save_csv('sum_stocks.csv', Stock.get_table_header(), stocks_events)
+    ses = [StockEvent(x) for x in espps + rests + trades]
+
+    etc.save_csv('detailed_espp.csv', EsppStock.csv_header(), [e.csved() for e in espps])
+    etc.save_csv('detailed_rs.csv', RestrictedStock.csv_header(), [r.csved() for r in rests])
+    etc.save_csv('detailed_trades.csv', Trade.csv_header(), [t.csved() for t in trades])
+    etc.save_csv('sum_stocks.csv', StockEvent.csv_header(), [s.csved() for s in ses])

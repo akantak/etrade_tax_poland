@@ -21,7 +21,7 @@ class Dividend:
         self.pln_tax_paid = 0.0
         self.pln_tax_due = 0.0
 
-    def get_csved_object(self):
+    def csved(self):
         """Csved class object."""
         return ','.join([
             self.pay_date.strftime('%d.%m.%Y'),
@@ -37,7 +37,7 @@ class Dividend:
         ])
 
     @staticmethod
-    def get_table_header():
+    def csv_header():
         """Return table header for CSVed objects."""
         return ','.join([
             'VEST_DATE',
@@ -96,32 +96,38 @@ def get_dividend_from_text(text):
     )
 
 
-def get_dividends_sum_up_lines(dividends):
+def dividends_sum_header():
+    """Return dividends sum csv file header."""
+    return ','.join([
+        'NAME',
+        'VALUE',
+        'PIT_FIELD',
+    ])
+
+
+def dividends_sum_csved(dividends):
     """Extract sum up lines from dividends list."""
     if not dividends:
         return []
-    flat_rate_tax = sum(div.flat_rate_tax for div in dividends)
-    tax_paid = sum(div.pln_tax_paid for div in dividends)
-    tax_due = sum(div.pln_tax_due for div in dividends)
 
     return [
-        f'DIVIDENDS TAX FLAT-RATE\t(PIT-38/G/45):\t{flat_rate_tax:.2f} zł',
-        f'DIVIDENDS TAX PAID\t\t(PIT-38/G/46):\t{tax_paid:.2f} zł',
-        f'DIVIDENDS TAX DIFF\t\t(PIT-38/G/47):\t{tax_due:.2f} zł'
+        f'tax flat-rate,{sum(div.flat_rate_tax for div in dividends):.2f},PIT-38/G/45',
+        f'tax paid,{sum(div.pln_tax_paid for div in dividends):.2f},PIT-38/G/46',
+        f'tax diff,{sum(div.pln_tax_due for div in dividends):.2f},PIT-38/G/47',
     ]
 
 
 def process_dividend_docs(directory):
     """Count due tax based on statements files in directory."""
-    files = etc.get_all_pdf_files(directory)
+    files = etc.pdfs_in_dir(directory)
     dividends = []
     for filename in files:
-        text = etc.get_text_from_file(f'{directory}/{filename}')
+        text = etc.file_to_text(f'{directory}/{filename}')
         if dividend := get_dividend_from_text(text):
             dividends.append(dividend)
 
     for dividend in dividends:
-        dividend.insert_currencies_ratio(*etc.get_usd_pln_ratio(dividend.pay_date))
+        dividend.insert_currencies_ratio(*etc.date_to_usd_pln(dividend.pay_date))
 
-    etc.save_txt('sum_dividends.txt', get_dividends_sum_up_lines(dividends))
-    etc.save_csv('detailed_dividends.csv', Dividend.get_table_header(), dividends)
+    etc.save_csv('detailed_dividends.csv', Dividend.csv_header(), [d.csved() for d in dividends])
+    etc.save_csv('sum_dividends.csv', dividends_sum_header(), dividends_sum_csved(dividends))
