@@ -1,6 +1,6 @@
 # Etrade docs parsing for dividends and stocks vest/sell
 
-Using on your own risk!
+Use at your own risk!
 
 ## General
 
@@ -14,7 +14,7 @@ python3 -m pip install pypdf requests
 
 ### Preparation
 
-Prepare a directory with all PDF files to be considered for parsing process. Review sections
+Prepare a directory with all PDF files to be considered for the parsing process. Review sections
 [Dividends](#dividends) and [Stocks](#stocks).
 
 ### Usage
@@ -33,7 +33,7 @@ python3 etrade.py
 
 ### Output
 
-In previously indicated directory, there will be created detailed files:
+In the previously indicated directory, there will be created detailed files:
 
 - detailed_dividends.csv
 - detailed_espp.csv
@@ -41,10 +41,12 @@ In previously indicated directory, there will be created detailed files:
 - detailed_stocks_all.csv
 - detailed_trades.csv
 
-and files with sum ups:
+and files with sum-ups:
 
 - sum_dividends.csv
 - sum_stocks.csv
+
+> Unless there is no data to be filled for a file. An empty file won't be created.
 
 ## Dividends
 
@@ -53,8 +55,8 @@ based on multiple E*Trade statements.
 
 ### Dividends calculation methodology
 
-The dividends withholding tax (`podatek u źródła`) is 15%, while in Poland, the tax is 19%,
-so it is required to pay additional 4% in Poland.
+The dividends withholding tax (`podatek u źródła`) is 15%, while in Poland, the capital gains tax is 19%,
+so it is required to pay an additional 4% in Poland.
 
 The amounts in USD have to be converted with the NBP ratio from the day before granting/vesting.
 
@@ -72,9 +74,9 @@ Parse stocks purchase/sell documents.
 
 ### Stocks calculation methodology
 
-For selling `Restricted Stocks RS`, there is 0 tax deductible costs.
+For selling `Restricted Stocks RS`, there are 0 tax-deductible costs.
 
-For selling `Employee Stock Purchase Plan (ESPP)`, the purchase price is a tax deductible cost.
+When selling the `Employee Stock Purchase Plan (ESPP)`, the purchase price is the tax-deductible cost.
 
 ### Stocks documents
 
@@ -85,5 +87,5 @@ Those files will be named `getEsppConfirmation.pdf` or `getReleaseConfirmation.p
 ### Trades confirmation
 
 To get trade confirmations, go to <https://edoc.etrade.com/e/t/onlinedocs/docsearch?doc_type=cnf>
-and download required confirmations.
-Those files will be named like `ETRADE Brokerage Trade Confirmation (...).pdf`.
+and download the required confirmations.
+Those files will be named `ETRADE Brokerage Trade Confirmation (...).pdf`.
