@@ -275,8 +275,8 @@ def process_stock_docs(directory):
 
     ses = [StockEvent(x) for x in espps + rests + trades]
 
-    etc.save_csv('detailed_espp.csv', EsppStock.csv_header(), [e.csved() for e in espps])
-    etc.save_csv('detailed_rs.csv', RestrictedStock.csv_header(), [r.csved() for r in rests])
-    etc.save_csv('detailed_trades.csv', Trade.csv_header(), [t.csved() for t in trades])
-    etc.save_csv('detailed_stocks_all.csv', StockEvent.csv_header(), [s.csved() for s in ses])
-    etc.save_csv('sum_stocks.csv', etc.sum_file_header(), stocks_sum_csved(ses))
+    etc.save_csv('_espp.csv', EsppStock.csv_header(), [e.csved() for e in espps])
+    etc.save_csv('_rs.csv', RestrictedStock.csv_header(), [r.csved() for r in rests])
+    etc.save_csv('_trade.csv', Trade.csv_header(), [t.csved() for t in trades])
+    etc.save_csv('_stocks.csv', StockEvent.csv_header(), [s.csved() for s in ses])
+    etc.save_csv('stocks_summary.csv', etc.sum_file_header(), stocks_sum_csved(ses))

@@ -4,6 +4,8 @@ import sys
 
 from dividends import process_dividend_docs
 
+from etrade_common import merge_csvs
+
 from stocks import process_stock_docs
 
 
@@ -21,3 +23,4 @@ def parse_all_docs():
 
 
 parse_all_docs()
+merge_csvs()

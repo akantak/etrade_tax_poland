@@ -154,5 +154,5 @@ def process_dividend_docs(directory):
     for dividend in dividends:
         dividend.insert_currencies_ratio(*etc.date_to_usd_pln(dividend.pay_date))
 
-    etc.save_csv('detailed_dividends.csv', Dividend.csv_header(), [d.csved() for d in dividends])
-    etc.save_csv('sum_dividends.csv', etc.sum_file_header(), dividends_sum_csved(dividends))
+    etc.save_csv('_dividend.csv', Dividend.csv_header(), [d.csved() for d in dividends])
+    etc.save_csv('dividends_summary.csv', etc.sum_file_header(), dividends_sum_csved(dividends))

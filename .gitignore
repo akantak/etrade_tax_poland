@@ -7,11 +7,4 @@ getEsppConfirmation*
 getReleaseConfirmation*
 ETRADE Brokerage Trade Confirmation*
 
-detailed_dividends.csv
-detailed_espp.csv
-detailed_rs.csv
-detailed_stocks_all.csv
-detailed_trades.csv
-
-sum_dividends.csv
-sum_stocks.csv
+etrade.xslx

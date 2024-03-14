@@ -5,6 +5,8 @@ import json
 import os
 from time import sleep
 
+import pyexcel.cookbook as xlsck
+
 from pypdf import PdfReader
 
 import requests
@@ -25,6 +27,14 @@ def file_to_text(filename):
     for page in reader.pages:
         text += page.extract_text() + '\n'
     return text
+
+
+def merge_csvs():
+    """Merge csvs into xlsx and remove them."""
+    files_list = glob.glob('*.csv')
+    xlsck.merge_all_to_a_book(files_list, 'etrade.xlsx')
+    for file_name in files_list:
+        os.remove(file_name)
 
 
 class NbpRatiosCache():

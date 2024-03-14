@@ -9,7 +9,7 @@ Use at your own risk!
 Install script dependencies:
 
 ```bash
-python3 -m pip install pypdf requests
+python3 -m pip install -r requirements.txt
 ```
 
 ### Preparation
@@ -33,20 +33,8 @@ python3 etrade.py
 
 ### Output
 
-In the previously indicated directory, there will be created detailed files:
-
-- detailed_dividends.csv
-- detailed_espp.csv
-- detailed_rs.csv
-- detailed_stocks_all.csv
-- detailed_trades.csv
-
-and files with sum-ups:
-
-- sum_dividends.csv
-- sum_stocks.csv
-
-> Unless there is no data to be filled for a file. An empty file won't be created.
+In the previously indicated directory, there will be created a spreadsheet file `etrade.xslx`,
+with multiple sheets, one for each data type.
 
 ## Dividends
 

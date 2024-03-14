@@ -1,0 +1,4 @@
+pypdf
+requests
+pyexcel
+pyexcel-xlsx
