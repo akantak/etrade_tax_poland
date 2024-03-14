@@ -36,15 +36,23 @@ python3 etrade.py
 In the previously indicated directory, there will be created a spreadsheet file `etrade.xslx`,
 with multiple sheets, one for each data type.
 
+After the spreadsheet is prepared, review if all entries are valid for the selected fiscal year,
+and review if any stock purchase data were not already included in previous PITs.
+
 ## Dividends
 
-There is a script prepared that calculates paid tax vs due tax for dividends
+There is a script prepared that calculates paid tax vs due tax for stock dividends
 based on multiple E*Trade statements.
+
+Also, there is a second dividend type for dividends paid from the Liquidity Fund.
+For those, there is no tax paid in the US.
 
 ### Dividends calculation methodology
 
-The dividends withholding tax (`podatek u źródła`) is 15%, while in Poland, the capital gains tax is 19%,
-so it is required to pay an additional 4% in Poland.
+The dividends withholding tax (`podatek u źródła`) is 15% (for stocks dividends), while in Poland,
+the capital gains tax is 19%, so it is required to pay an additional 4% in Poland.
+
+While, for the Liquidity Fund dividends, one has to pay the whole 19% tax in Poland.
 
 The amounts in USD have to be converted with the NBP ratio from the day before granting/vesting.
 
@@ -58,7 +66,7 @@ Those statements can be found on <https://edoc.etrade.com/e/t/onlinedocs/docsear
 
 ## Stocks
 
-Parse stocks purchase/sell documents.
+Parse stocks purchase/vest/sell documents.
 
 ### Stocks calculation methodology
 
