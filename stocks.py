@@ -262,16 +262,13 @@ def process_stock_docs(directory):
     for filename in files:
         full_path = f'{directory}/{filename}'
         text = etc.file_to_text(full_path)
-        espp = espp_from_text(text)
-        rest = rs_from_text(text)
-        trade = trade_from_text(text)
-        if espp:
+        if espp := espp_from_text(text):
             espp.file = full_path
             espps.append(espp)
-        if rest:
+        if rest := rs_from_text(text):
             rest.file = full_path
             rests.append(rest)
-        if trade:
+        if trade := trade_from_text(text):
             trade.file = full_path
             trade.insert_currencies_ratio(*etc.date_to_usd_pln(trade.trade_date))
             trades.append(trade)

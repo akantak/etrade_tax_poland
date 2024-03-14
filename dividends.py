@@ -20,6 +20,7 @@ class Dividend:
         self.flat_rate_tax = 0.0
         self.pln_tax_paid = 0.0
         self.pln_tax_due = 0.0
+        self.file = ''
 
     def csved(self):
         """Csved class object."""
@@ -34,6 +35,7 @@ class Dividend:
             f'{self.flat_rate_tax:.2f}',
             f'{self.pln_tax_paid:.2f}',
             f'{self.pln_tax_due:.2f}',
+            self.file,
         ])
 
     @staticmethod
@@ -50,6 +52,7 @@ class Dividend:
             'PLN_TAX_TOTAL',
             'PLN_TAX_PAID',
             'PLN_TAX_DUE',
+            'FILE',
         ])
 
     def insert_currencies_ratio(self, ratio_date, ratio_value):
@@ -62,8 +65,8 @@ class Dividend:
         self.pln_tax_due = self.flat_rate_tax - self.pln_tax_paid
 
 
-def get_dividend_from_text(text):
-    """Get dividend data from text in an class object."""
+def get_stock_dividend_from_text(text):
+    """Get dividend data from text."""
     dividend_lines = []
     year_line = ''
     lines = text.split('\n')
@@ -96,6 +99,21 @@ def get_dividend_from_text(text):
     )
 
 
+def get_liquidity_dividends_from_text(text):
+    """Get liquidity dividend data from text."""
+    ldivs = []
+    year = ''
+    lines = text.split('\n')
+    for i, line in enumerate(lines):
+        if 'Account DetailCLIENT STATEMENT' in line:
+            year = line.split()[-1]
+        if 'Dividend TREASURY LIQUIDITY FUND' in line:
+            date = f'{line.split()[0]}/{year}'
+            amount = lines[i + 1].split('PAYMENT')[-1].replace('$', '')
+            ldivs.append(Dividend(date, amount, 0, amount))
+    return ldivs
+
+
 def dividends_sum_header():
     """Return dividends sum csv file header."""
     return ','.join([
@@ -123,8 +141,15 @@ def process_dividend_docs(directory):
     dividends = []
     for filename in files:
         text = etc.file_to_text(f'{directory}/{filename}')
-        if dividend := get_dividend_from_text(text):
+        if dividend := get_stock_dividend_from_text(text):
+            dividend.file = filename
+            dividend.insert_currencies_ratio(*etc.date_to_usd_pln(dividend.pay_date))
             dividends.append(dividend)
+        if ldivs := get_liquidity_dividends_from_text(text):
+            for ldiv in ldivs:
+                ldiv.file = filename
+                ldiv.insert_currencies_ratio(*etc.date_to_usd_pln(ldiv.pay_date))
+            dividends += ldivs
 
     for dividend in dividends:
         dividend.insert_currencies_ratio(*etc.date_to_usd_pln(dividend.pay_date))
