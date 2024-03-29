@@ -109,7 +109,10 @@ def get_liquidity_dividends_from_text(text):
             year = line.split()[-1]
         if 'Dividend TREASURY LIQUIDITY FUND' in line:
             date = f'{line.split()[0]}/{year}'
-            amount = lines[i + 1].split('PAYMENT')[-1].replace('$', '')
+            if "Transaction Reportable for the Prior Year" in line:
+                amount = lines[i].split('$')[-1]
+            else:
+                amount = lines[i + 1].split('PAYMENT')[-1].replace('$', '')
             ldivs.append(Dividend(date, amount, 0, amount))
     return ldivs
 

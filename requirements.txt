@@ -1,4 +1,4 @@
-pypdf
+pypdf==4.1.0
 requests
 pyexcel
 pyexcel-xlsx
