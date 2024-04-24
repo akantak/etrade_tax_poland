@@ -1,8 +1,11 @@
 # Etrade docs parsing for dividends and stocks vest/sell
 
-Use at your own risk!
+Use at your own risk! Do not treat it as a tax consultancy.
 
 ## General
+
+Those scripts were initally designed to calculate taxes from E*TRADE dividends for Intel employees.
+Stock sales/vesting and liquidity funds were added later. It was not tested with any other entities.
 
 ### Dependencies
 

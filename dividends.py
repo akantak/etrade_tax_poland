@@ -72,7 +72,7 @@ def get_stock_dividend_from_text(text):
     lines = text.split('\n')
 
     for i, line in enumerate(lines):
-        if 'Dividend INTEL CORP' in line:
+        if 'Dividend ' in line and 'Next Dividend Payable' not in line and 'LIQUIDITY' not in line:
             dividend_lines = lines[i:i + 6]
         if 'Account DetailCLIENT STATEMENT' in line:
             year_line = line
@@ -109,7 +109,7 @@ def get_liquidity_dividends_from_text(text):
             year = line.split()[-1]
         if 'Dividend TREASURY LIQUIDITY FUND' in line:
             date = f'{line.split()[0]}/{year}'
-            if "Transaction Reportable for the Prior Year" in line:
+            if 'Transaction Reportable for the Prior Year' in line:
                 amount = lines[i].split('$')[-1]
             else:
                 amount = lines[i + 1].split('PAYMENT')[-1].replace('$', '')
