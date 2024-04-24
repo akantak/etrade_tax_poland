@@ -159,6 +159,7 @@ class StockEvent:
             self.sale_date = base_object.trade_date
             self.sale_shares_count = base_object.shares_sold
             self.sale_income = base_object.pln_income
+        self.file = base_object.file
 
     def csved(self):
         """Csved class object."""
@@ -170,6 +171,7 @@ class StockEvent:
                 self.sale_date.strftime("%d.%m.%Y") if self.sale_date else "",
                 f"{self.sale_shares_count}" if self.sale_shares_count else "",
                 f"{self.sale_income:.2f}" if self.sale_income else "",
+                self.file,
             ]
         )
 
@@ -184,6 +186,7 @@ class StockEvent:
                 "SELL_DATE",
                 "SELL_SHARES_COUNT",
                 "SELL_INCOME",
+                "FILE",
             ]
         )
 
