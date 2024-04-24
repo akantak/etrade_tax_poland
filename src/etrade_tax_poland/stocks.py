@@ -1,47 +1,51 @@
 """Find all statements for stocks in a directory and parse."""
 
-import datetime
+from datetime import datetime
 
 from . import common as etc
 
 
-class Trade():
+class Trade:
     """Contains all data for stock sell."""
 
     def __init__(self):
         """Init trade object."""
         self.shares_sold = 0
         self.usd_net_income = 0.0
-        self.trade_date = datetime.datetime.fromtimestamp(0)
-        self.ratio_date = datetime.datetime.fromtimestamp(0)
+        self.trade_date = datetime.fromtimestamp(0)
+        self.ratio_date = datetime.fromtimestamp(0)
         self.ratio_value = 0.0
         self.pln_income = 0.0
-        self.file = ''
+        self.file = ""
 
     def csved(self):
         """Csved class object."""
-        return ','.join([
-            self.trade_date.strftime('%d.%m.%Y'),
-            f'{self.usd_net_income:.2f}',
-            f'{self.shares_sold}',
-            self.ratio_date.strftime('%d.%m.%Y'),
-            f'{self.ratio_value:.6f}',
-            f'{self.pln_income:.2f}',
-            self.file,
-        ])
+        return ",".join(
+            [
+                self.trade_date.strftime("%d.%m.%Y"),
+                f"{self.usd_net_income:.2f}",
+                f"{self.shares_sold}",
+                self.ratio_date.strftime("%d.%m.%Y"),
+                f"{self.ratio_value:.6f}",
+                f"{self.pln_income:.2f}",
+                self.file,
+            ]
+        )
 
     @staticmethod
     def csv_header():
         """Return table header for CSVed objects."""
-        return ','.join([
-            'TRADE_DATE',
-            'USD_NET_INCOME',
-            'SHARES_SOLD',
-            'RATIO_DATE',
-            'RATIO_VALUE',
-            'PLN_INCOME',
-            'FILE',
-        ])
+        return ",".join(
+            [
+                "TRADE_DATE",
+                "USD_NET_INCOME",
+                "SHARES_SOLD",
+                "RATIO_DATE",
+                "RATIO_VALUE",
+                "PLN_INCOME",
+                "FILE",
+            ]
+        )
 
     def insert_currencies_ratio(self, ratio_date, ratio_value):
         """Insert currencies ratio and calculate dependent variables."""
@@ -50,18 +54,18 @@ class Trade():
         self.pln_income = ratio_value * self.usd_net_income
 
 
-class EsppStock():
+class EsppStock:
     """Contains all data for ESPP stock purchase."""
 
     def __init__(self):
         """Init espp bought stock object."""
-        self.purchase_date = datetime.datetime.fromtimestamp(0)
+        self.purchase_date = datetime.fromtimestamp(0)
         self.pln_contribution_gross = 0.0
         self.usd_contribution_refund = 0.0
         self.pln_contribution_net = 0.0
         self.vest_day_ratio = 0.0
         self.shares_purchased = 0
-        self.file = ''
+        self.file = ""
 
     def calculate_pln_contribution_net(self):
         """Based on set values, calculated net pln contribution."""
@@ -70,61 +74,69 @@ class EsppStock():
 
     def csved(self):
         """Csved class object."""
-        return ','.join([
-            self.purchase_date.strftime('%d.%m.%Y'),
-            f'{self.pln_contribution_gross:.2f}',
-            f'{self.usd_contribution_refund:.2f}',
-            f'{self.vest_day_ratio:.6f}',
-            f'{self.pln_contribution_net:.2f}',
-            f'{self.shares_purchased}',
-            self.file,
-        ])
+        return ",".join(
+            [
+                self.purchase_date.strftime("%d.%m.%Y"),
+                f"{self.pln_contribution_gross:.2f}",
+                f"{self.usd_contribution_refund:.2f}",
+                f"{self.vest_day_ratio:.6f}",
+                f"{self.pln_contribution_net:.2f}",
+                f"{self.shares_purchased}",
+                self.file,
+            ]
+        )
 
     @staticmethod
     def csv_header():
         """Return table header for CSVed objects."""
-        return ','.join([
-            'VEST_DATE',
-            'PLN_CONTRIB_GROSS',
-            'USD_CONTRIB_REFUND',
-            'VEST_DAY_RATIO',
-            'PLN_CONTRIB_NET',
-            'SHARES_PURCHASED',
-            'FILE',
-        ])
+        return ",".join(
+            [
+                "VEST_DATE",
+                "PLN_CONTRIB_GROSS",
+                "USD_CONTRIB_REFUND",
+                "VEST_DAY_RATIO",
+                "PLN_CONTRIB_NET",
+                "SHARES_PURCHASED",
+                "FILE",
+            ]
+        )
 
 
-class RestrictedStock():
+class RestrictedStock:
     """Contains all data for RS stock vest."""
 
     def __init__(self):
         """Init restricted stock object."""
-        self.release_date = datetime.datetime.fromtimestamp(0)
+        self.release_date = datetime.fromtimestamp(0)
         self.shares_released = 0
         self.release_gain = 0.0
-        self.file = ''
+        self.file = ""
 
     def csved(self):
         """Csved class object."""
-        return ','.join([
-            self.release_date.strftime('%d.%m.%Y'),
-            f'{self.shares_released}',
-            f'{self.release_gain:.2f}',
-            self.file,
-        ])
+        return ",".join(
+            [
+                self.release_date.strftime("%d.%m.%Y"),
+                f"{self.shares_released}",
+                f"{self.release_gain:.2f}",
+                self.file,
+            ]
+        )
 
     @staticmethod
     def csv_header():
         """Return table header for CSVed objects."""
-        return ','.join([
-            'VEST_DATE',
-            'SHARES_RELEASED',
-            'USD_GAIN',
-            'FILE',
-        ])
+        return ",".join(
+            [
+                "VEST_DATE",
+                "SHARES_RELEASED",
+                "USD_GAIN",
+                "FILE",
+            ]
+        )
 
 
-class StockEvent():
+class StockEvent:
     """Contains sum up data for stock event."""
 
     def __init__(self, base_object):
@@ -150,49 +162,53 @@ class StockEvent():
 
     def csved(self):
         """Csved class object."""
-        return ','.join([
-            self.buy_date.strftime('%d.%m.%Y') if self.buy_date else '',
-            f'{self.buy_shares_count}' if self.buy_shares_count else '',
-            f'{self.buy_tax_deductible:.2f}' if self.buy_tax_deductible else '',
-            self.sale_date.strftime('%d.%m.%Y') if self.sale_date else '',
-            f'{self.sale_shares_count}' if self.sale_shares_count else '',
-            f'{self.sale_income:.2f}' if self.sale_income else '',
-        ])
+        return ",".join(
+            [
+                self.buy_date.strftime("%d.%m.%Y") if self.buy_date else "",
+                f"{self.buy_shares_count}" if self.buy_shares_count else "",
+                f"{self.buy_tax_deductible:.2f}" if self.buy_tax_deductible else "",
+                self.sale_date.strftime("%d.%m.%Y") if self.sale_date else "",
+                f"{self.sale_shares_count}" if self.sale_shares_count else "",
+                f"{self.sale_income:.2f}" if self.sale_income else "",
+            ]
+        )
 
     @staticmethod
     def csv_header():
         """Return table header for CSVed objects."""
-        return ','.join([
-            'BUY_DATE',
-            'BUY_SHARES_COUNT',
-            'BUY_TAX_DEDUCT',
-            'SELL_DATE',
-            'SELL_SHARES_COUNT',
-            'SELL_INCOME',
-        ])
+        return ",".join(
+            [
+                "BUY_DATE",
+                "BUY_SHARES_COUNT",
+                "BUY_TAX_DEDUCT",
+                "SELL_DATE",
+                "SELL_SHARES_COUNT",
+                "SELL_INCOME",
+            ]
+        )
 
 
 def cash_to_float(str_number):
     """Cast cash string with comma separator to float."""
-    return float(str_number.replace(',', ''))
+    return float(str_number.replace(",", ""))
 
 
 def espp_from_text(text):
     """Find all ESPP bought stocks data in text."""
-    if 'EMPLOYEE STOCK PLAN PURCHASE CONFIRMATION' not in text:
-        return ''
-    lines = text.split('\n')
+    if "EMPLOYEE STOCK PLAN PURCHASE CONFIRMATION" not in text:
+        return ""
+    lines = text.split("\n")
     stock = EsppStock()
     for line in lines:
-        if 'Purchase Date' in line:
-            stock.purchase_date = datetime.datetime.strptime(line.split()[2][:-6], '%m-%d-%Y')
-        if 'Foreign Contributions' in line:
+        if "Purchase Date" in line:
+            stock.purchase_date = datetime.strptime(line.split()[2][:-6], "%m-%d-%Y")
+        if "Foreign Contributions" in line:
             stock.pln_contribution_gross = cash_to_float(line.split()[-1])
-        if 'Average Exchange Rate' in line:
+        if "Average Exchange Rate" in line:
             stock.vest_day_ratio = float(line.split()[-1][1:])
-        if 'Amount Refunded' in line:
+        if "Amount Refunded" in line:
             stock.usd_contribution_refund = float(line.split()[-1][2:-1])
-        if 'Shares Purchased' in line and len(line.split()) == 3:
+        if "Shares Purchased" in line and len(line.split()) == 3:
             stock.shares_purchased = int(float(line.split()[-1]))
 
     stock.calculate_pln_contribution_net()
@@ -201,32 +217,32 @@ def espp_from_text(text):
 
 def rs_from_text(text):
     """Find all Restricted Stocks vested data in text."""
-    if 'EMPLOYEE STOCK PLAN RELEASE CONFIRMATION' not in text:
-        return ''
-    lines = text.split('\n')
+    if "EMPLOYEE STOCK PLAN RELEASE CONFIRMATION" not in text:
+        return ""
+    lines = text.split("\n")
     rest = RestrictedStock()
     for line in lines:
-        if 'Release Date' in line:
-            rest.release_date = datetime.datetime.strptime(line.split()[-1], '%m-%d-%Y')
-        if 'Shares Released' in line and len(line.split()) == 3:
+        if "Release Date" in line:
+            rest.release_date = datetime.strptime(line.split()[-1], "%m-%d-%Y")
+        if "Shares Released" in line and len(line.split()) == 3:
             rest.shares_released = int(float(line.split()[-1]))
-        if 'Total Gain' in line:
+        if "Total Gain" in line:
             rest.release_gain = cash_to_float(line.split()[-1][1:])
     return rest
 
 
 def trade_from_text(text):
     """Find all trade data in text."""
-    if 'TRADECONFIRMATION' not in text:
-        return ''
-    lines = text.split('\n')
+    if "TRADECONFIRMATION" not in text:
+        return ""
+    lines = text.split("\n")
     trade = Trade()
     for line in lines:
-        if 'Stock Plan' in line:
+        if "Stock Plan" in line:
             trade.shares_sold = int(line.split()[5])
-            date_str = f'{line.split()[0][:-2]}20{line.split()[0][-2:]}'
-            trade.trade_date = datetime.datetime.strptime(date_str, '%m/%d/%Y')
-        if 'NET AMOUNT' in line:
+            date_str = f"{line.split()[0][:-2]}20{line.split()[0][-2:]}"
+            trade.trade_date = datetime.strptime(date_str, "%m/%d/%Y")
+        if "NET AMOUNT" in line:
             trade.usd_net_income = cash_to_float(line.split()[-1][1:])
     return trade
 
@@ -243,12 +259,12 @@ def stocks_sum_csved(stocks):
     tax_base = rounded_profit * etc.TAX_PL
     tax_rounded = int(round(tax_base, 0))
     return [
-        f'other income,{other_income:.2f},PIT-38/C/22&24',
-        f'tax deductible,{tax_deductible:.2f},PIT-38/C/23&25',
-        f'profit,{profit:.2f},PIT-38/C/26',
-        f'profit_rounded,{rounded_profit},PIT-38/C/29',
-        f'tax_base,{tax_base:.2f},PIT-38/C/31',
-        f'tax_rounded,{tax_rounded},PIT-38/C/33',
+        f"other income,{other_income:.2f},PIT-38/C/22&24",
+        f"tax deductible,{tax_deductible:.2f},PIT-38/C/23&25",
+        f"profit,{profit:.2f},PIT-38/C/26",
+        f"profit_rounded,{rounded_profit},PIT-38/C/29",
+        f"tax_base,{tax_base:.2f},PIT-38/C/31",
+        f"tax_rounded,{tax_rounded},PIT-38/C/33",
     ]
 
 
@@ -260,7 +276,7 @@ def process_stock_docs(directory):
     trades = []  # stocks sell events
 
     for filename in files:
-        full_path = f'{directory}/{filename}'
+        full_path = f"{directory}/{filename}"
         text = etc.file_to_text(full_path)
         if espp := espp_from_text(text):
             espp.file = full_path
@@ -275,8 +291,8 @@ def process_stock_docs(directory):
 
     ses = [StockEvent(x) for x in espps + rests + trades]
 
-    etc.save_csv('_espp.csv', EsppStock.csv_header(), [e.csved() for e in espps])
-    etc.save_csv('_rs.csv', RestrictedStock.csv_header(), [r.csved() for r in rests])
-    etc.save_csv('_trade.csv', Trade.csv_header(), [t.csved() for t in trades])
-    etc.save_csv('_stocks.csv', StockEvent.csv_header(), [s.csved() for s in ses])
-    etc.save_csv('stocks_summary.csv', etc.sum_file_header(), stocks_sum_csved(ses))
+    etc.save_csv("_espp.csv", EsppStock.csv_header(), [e.csved() for e in espps])
+    etc.save_csv("_rs.csv", RestrictedStock.csv_header(), [r.csved() for r in rests])
+    etc.save_csv("_trade.csv", Trade.csv_header(), [t.csved() for t in trades])
+    etc.save_csv("_stocks.csv", StockEvent.csv_header(), [s.csved() for s in ses])
+    etc.save_csv("stocks_summary.csv", etc.sum_header(), stocks_sum_csved(ses))

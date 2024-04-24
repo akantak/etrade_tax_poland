@@ -1,10 +1,11 @@
 """Fill the NBP cache."""
+
 import datetime
 
-from etrade_tax_poland.common import date_to_usd_pln
+from .common import date_to_usd_pln
 
 date_obj = datetime.datetime.now()
-end = datetime.datetime.fromisoformat('2020-01-01')
+end = datetime.datetime.fromisoformat("2020-01-01")
 while True:
     if date_obj < end:
         break
