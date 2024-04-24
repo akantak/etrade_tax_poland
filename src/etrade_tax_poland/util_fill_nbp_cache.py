@@ -2,7 +2,7 @@
 
 import datetime
 
-from .common import date_to_usd_pln
+from .nbp import date_to_usd_pln
 
 date_obj = datetime.datetime.now()
 end = datetime.datetime.fromisoformat("2020-01-01")

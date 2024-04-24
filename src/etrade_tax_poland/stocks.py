@@ -2,7 +2,9 @@
 
 from datetime import datetime
 
-from . import common as etc
+from . import files_handling as fh
+from . import nbp
+from .common import TAX_PL
 
 
 class Trade:
@@ -259,7 +261,7 @@ def stocks_sum_csved(stocks):
     tax_deductible = sum(s.buy_tax_deductible for s in stocks)
     profit = other_income - tax_deductible
     rounded_profit = int(round(profit, 0))
-    tax_base = rounded_profit * etc.TAX_PL
+    tax_base = rounded_profit * TAX_PL
     tax_rounded = int(round(tax_base, 0))
     return [
         f"other income,{other_income:.2f},PIT-38/C/22&24",
@@ -273,14 +275,14 @@ def stocks_sum_csved(stocks):
 
 def process_stock_docs(directory):
     """Process all docs and find stocks data."""
-    files = etc.pdfs_in_dir(directory)
+    files = fh.pdfs_in_dir(directory)
     espps = []  # Employee Stock Purchase Plan
     rests = []  # Restricted Stock
     trades = []  # stocks sell events
 
     for filename in files:
         full_path = f"{directory}/{filename}"
-        text = etc.file_to_text(full_path)
+        text = fh.file_to_text(full_path)
         if espp := espp_from_text(text):
             espp.file = full_path
             espps.append(espp)
@@ -289,13 +291,13 @@ def process_stock_docs(directory):
             rests.append(rest)
         if trade := trade_from_text(text):
             trade.file = full_path
-            trade.insert_currencies_ratio(*etc.date_to_usd_pln(trade.trade_date))
+            trade.insert_currencies_ratio(*nbp.date_to_usd_pln(trade.trade_date))
             trades.append(trade)
 
     ses = [StockEvent(x) for x in espps + rests + trades]
 
-    etc.save_csv("_espp.csv", EsppStock.csv_header(), [e.csved() for e in espps])
-    etc.save_csv("_rs.csv", RestrictedStock.csv_header(), [r.csved() for r in rests])
-    etc.save_csv("_trade.csv", Trade.csv_header(), [t.csved() for t in trades])
-    etc.save_csv("_stocks.csv", StockEvent.csv_header(), [s.csved() for s in ses])
-    etc.save_csv("stocks_summary.csv", etc.sum_header(), stocks_sum_csved(ses))
+    fh.save_csv("_espp.csv", EsppStock.csv_header(), [e.csved() for e in espps])
+    fh.save_csv("_rs.csv", RestrictedStock.csv_header(), [r.csved() for r in rests])
+    fh.save_csv("_trade.csv", Trade.csv_header(), [t.csved() for t in trades])
+    fh.save_csv("_stocks.csv", StockEvent.csv_header(), [s.csved() for s in ses])
+    fh.save_csv("stocks_summary.csv", fh.sum_header(), stocks_sum_csved(ses))

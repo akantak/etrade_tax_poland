@@ -2,7 +2,9 @@
 
 import datetime
 
-from . import common as etc
+from . import files_handling as fh
+from . import nbp
+from .common import TAX_PL
 
 
 class Dividend:
@@ -64,7 +66,7 @@ class Dividend:
         self.ratio_date = ratio_date
         self.ratio_value = ratio_value
         self.pln_gross = round(self.usd_gross * ratio_value, 2)
-        self.flat_rate_tax = round(self.pln_gross * etc.TAX_PL, 2)
+        self.flat_rate_tax = round(self.pln_gross * TAX_PL, 2)
         self.pln_tax_paid = round(self.usd_tax * ratio_value, 2)
         self.pln_tax_due = self.flat_rate_tax - self.pln_tax_paid
 
@@ -139,22 +141,22 @@ def divs_sum_csved(dividends):
 
 def process_dividend_docs(directory):
     """Count due tax based on statements files in directory."""
-    files = etc.pdfs_in_dir(directory)
+    files = fh.pdfs_in_dir(directory)
     dividends = []
     for filename in files:
-        text = etc.file_to_text(f"{directory}/{filename}")
+        text = fh.file_to_text(f"{directory}/{filename}")
         if dividend := get_stock_dividend_from_text(text):
             dividend.file = filename
-            dividend.insert_currencies_ratio(*etc.date_to_usd_pln(dividend.pay_date))
+            dividend.insert_currencies_ratio(*nbp.date_to_usd_pln(dividend.pay_date))
             dividends.append(dividend)
         if ldivs := get_liquidity_dividends_from_text(text):
             for ldiv in ldivs:
                 ldiv.file = filename
-                ldiv.insert_currencies_ratio(*etc.date_to_usd_pln(ldiv.pay_date))
+                ldiv.insert_currencies_ratio(*nbp.date_to_usd_pln(ldiv.pay_date))
             dividends += ldivs
 
     for dividend in dividends:
-        dividend.insert_currencies_ratio(*etc.date_to_usd_pln(dividend.pay_date))
+        dividend.insert_currencies_ratio(*nbp.date_to_usd_pln(dividend.pay_date))
 
-    etc.save_csv("_dividend.csv", Dividend.csv_header(), [d.csved() for d in dividends])
-    etc.save_csv("dividends_summary.csv", etc.sum_header(), divs_sum_csved(dividends))
+    fh.save_csv("_dividend.csv", Dividend.csv_header(), [d.csved() for d in dividends])
+    fh.save_csv("dividends_summary.csv", fh.sum_header(), divs_sum_csved(dividends))
