@@ -7,12 +7,12 @@ Use at your own risk! Do not treat it as a tax consultancy.
 Those scripts were initally designed to calculate taxes from E*TRADE dividends for Intel employees.
 Stock sales/vesting and liquidity funds were added later. It was not tested with any other entities.
 
-### Dependencies
+### Installation
 
-Install script dependencies:
+Install python module:
 
 ```bash
-python3 -m pip install -r requirements.txt
+python3 -m pip install https://github.com/akantak/etrade_tax_poland/archive/main.zip
 ```
 
 ### Preparation
@@ -22,16 +22,16 @@ Prepare a directory with all PDF files to be considered for the parsing process.
 
 ### Usage
 
-Run the script providing a directory with statements as a parameter (ex. `/tmp/statements`):
+Run the installed python module directly in the directory with PDFs:
 
 ```bash
-python3 etrade.py /tmp/statements
+python3 -m etrade_tax_poland
 ```
 
-or copy this script to the directory with statements and run:
+or pass the directory as an argument (if the statements are in ex. `/tmp/statements`):
 
 ```bash
-python3 etrade.py
+python3 -m etrade_tax_poland /tmp/statements
 ```
 
 ### Output
@@ -77,7 +77,7 @@ For selling `Restricted Stocks RS`, there are 0 tax-deductible costs.
 
 When selling the `Employee Stock Purchase Plan (ESPP)`, the purchase price is the tax-deductible cost.
 
-### Stocks documents
+### Stocks gain (bought or vest) documents
 
 Go to <https://us.etrade.com/etx/sp/stockplan#/myAccount/stockPlanConfirmations>
 and download all files that should be taken into consideration.
