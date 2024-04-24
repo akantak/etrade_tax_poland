@@ -8,3 +8,6 @@ getReleaseConfirmation*
 ETRADE Brokerage Trade Confirmation*
 
 etrade.xlsx
+build/
+dist/
+*egg-info/

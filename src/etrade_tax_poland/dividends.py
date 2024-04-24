@@ -2,7 +2,7 @@
 
 import datetime
 
-import etrade_common as etc
+from . import common as etc
 
 
 class Dividend:

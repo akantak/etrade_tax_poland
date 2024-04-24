@@ -2,11 +2,11 @@
 import os
 import sys
 
-from dividends import process_dividend_docs
+from .dividends import process_dividend_docs
 
-from etrade_common import merge_csvs
+from .common import merge_csvs
 
-from stocks import process_stock_docs
+from .stocks import process_stock_docs
 
 
 def parse_all_docs():
@@ -21,6 +21,7 @@ def parse_all_docs():
     process_dividend_docs(dir_path)
     process_stock_docs(dir_path)
 
+if __name__ == '__main__':
 
-parse_all_docs()
-merge_csvs()
+    parse_all_docs()
+    merge_csvs()

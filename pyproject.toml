@@ -1,0 +1,28 @@
+[project]
+name = "etrade_tax_poland"
+version = "0.0.6"
+authors = [
+  { name="Aleksander Kantak", email="aleksander.kantak@intel.com" },
+]
+description = "Calculate PIT 38 based on E*TRADE statements"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dynamic = ["dependencies"]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+etrade_tax_poland = ["nbp_cache.json"]
+
+[project.urls]
+Homepage = "https://github.com/akantak/etrade_tax_poland"
+Issues = "https://github.com/akantak/etrade_tax_poland/issues"
