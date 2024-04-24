@@ -1,6 +1,6 @@
 [project]
 name = "etrade_tax_poland"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
   { name="Aleksander Kantak", email="aleksander.kantak@intel.com" },
 ]
