@@ -92,8 +92,8 @@ def get_stock_dividend_from_text(text):
 
     if "Qualified" in dividend_lines[0]:
         # latest 2023 doc version
-        year = year_line.split()[-1]
-        pay_date = f"{dividend_lines[0].split()[0]}/{year}"
+        str_date = f"{dividend_lines[0].split()[0]}/{year_line.split()[-1]}"
+        pay_date = datetime.strptime(str_date, "%m/%d/%Y")
         gross = dividend_lines[0].split()[-1].replace("$", "")
         tax = dividend_lines[1].split()[-1][1:-1]
         net = dividend_lines[2].split()[-1][1:-1]
