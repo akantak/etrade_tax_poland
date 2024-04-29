@@ -4,7 +4,7 @@ from datetime import datetime
 
 from . import files_handling as fh
 from . import nbp
-from .common import TAX_PL
+from .common import ISO_DATE, TAX_PL
 
 
 class Trade:
@@ -24,10 +24,10 @@ class Trade:
         """Csved class object."""
         return ",".join(
             [
-                self.trade_date.strftime("%d.%m.%Y"),
+                self.trade_date.strftime(ISO_DATE),
                 f"{self.usd_net_income:.2f}",
                 f"{self.shares_sold}",
-                self.ratio_date.strftime("%d.%m.%Y"),
+                self.ratio_date.strftime(ISO_DATE),
                 f"{self.ratio_value:.6f}",
                 f"{self.pln_income:.2f}",
                 self.file,
@@ -78,7 +78,7 @@ class EsppStock:
         """Csved class object."""
         return ",".join(
             [
-                self.purchase_date.strftime("%d.%m.%Y"),
+                self.purchase_date.strftime(ISO_DATE),
                 f"{self.pln_contribution_gross:.2f}",
                 f"{self.usd_contribution_refund:.2f}",
                 f"{self.vest_day_ratio:.6f}",
@@ -118,7 +118,7 @@ class RestrictedStock:
         """Csved class object."""
         return ",".join(
             [
-                self.release_date.strftime("%d.%m.%Y"),
+                self.release_date.strftime(ISO_DATE),
                 f"{self.shares_released}",
                 f"{self.release_gain:.2f}",
                 self.file,
@@ -167,10 +167,10 @@ class StockEvent:
         """Csved class object."""
         return ",".join(
             [
-                self.buy_date.strftime("%d.%m.%Y") if self.buy_date else "",
+                self.buy_date.strftime(ISO_DATE) if self.buy_date else "",
                 f"{self.buy_shares_count}" if self.buy_shares_count else "",
                 f"{self.buy_tax_deductible:.2f}" if self.buy_tax_deductible else "",
-                self.sale_date.strftime("%d.%m.%Y") if self.sale_date else "",
+                self.sale_date.strftime(ISO_DATE) if self.sale_date else "",
                 f"{self.sale_shares_count}" if self.sale_shares_count else "",
                 f"{self.sale_income:.2f}" if self.sale_income else "",
                 self.file,

@@ -1,10 +1,10 @@
 """Find all statements for dividents in a directory and count the due tax."""
 
-import datetime
+from datetime import datetime
 
 from . import files_handling as fh
 from . import nbp
-from .common import TAX_PL, round_up
+from .common import ISO_DATE, TAX_PL, round_up
 
 
 class Dividend:
@@ -12,11 +12,11 @@ class Dividend:
 
     def __init__(self, pay_date, gross, tax, net):
         """Initialize an object."""
-        self.pay_date = datetime.datetime.strptime(pay_date, "%m/%d/%Y")
+        self.pay_date = pay_date
         self.usd_gross = float(gross)
         self.usd_tax = float(tax)
         self.usd_net = float(net)
-        self.ratio_date = datetime.datetime.fromtimestamp(0)
+        self.ratio_date = datetime.fromtimestamp(0)
         self.ratio_value = 0.0
         self.pln_gross = 0.0
         self.flat_rate_tax = 0.0
@@ -28,11 +28,11 @@ class Dividend:
         """Csved class object."""
         return ",".join(
             [
-                self.pay_date.strftime("%d.%m.%Y"),
+                self.pay_date.strftime(ISO_DATE),
                 f"{self.usd_gross:.2f}",
                 f"{self.usd_tax:.2f}",
                 f"{self.usd_net:.2f}",
-                self.ratio_date.strftime("%d.%m.%Y"),
+                self.ratio_date.strftime(ISO_DATE),
                 f"{self.ratio_value:.6f}",
                 f"{self.pln_gross:.2f}",
                 f"{self.flat_rate_tax:.2f}",
@@ -100,7 +100,7 @@ def get_stock_dividend_from_text(text):
     else:
         # before 09.2023 doc version
         date = dividend_lines[0].split()[0]
-        pay_date = f"{date[:-2]}20{date[-2:]}"
+        pay_date = datetime.strptime(f"{date[:-2]}20{date[-2:]}", "%m/%d/%Y")
         gross = dividend_lines[3].split()[-1].replace("$", "")
         tax = dividend_lines[3].split()[-2]
         net = dividend_lines[5].split()[-1][1:]
@@ -117,7 +117,7 @@ def get_liquidity_dividends_from_text(text):
         if "Account DetailCLIENT STATEMENT" in line:
             year = line.split()[-1]
         if "Dividend TREASURY LIQUIDITY FUND" in line:
-            date = f"{line.split()[0]}/{year}"
+            date = datetime.strptime(f"{line.split()[0]}/{year}", "%m/%d/%Y")
             if "Transaction Reportable for the Prior Year" in line:
                 amount = lines[i].split("$")[-1]
             else:

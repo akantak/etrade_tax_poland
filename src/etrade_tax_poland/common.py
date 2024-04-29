@@ -3,6 +3,7 @@
 import math
 
 TAX_PL = 0.19
+ISO_DATE = "%Y-%m-%d"
 
 
 def round_up(number):
