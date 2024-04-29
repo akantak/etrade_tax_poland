@@ -4,7 +4,7 @@ import datetime
 
 from . import files_handling as fh
 from . import nbp
-from .common import TAX_PL
+from .common import TAX_PL, round_up
 
 
 class Dividend:
@@ -131,10 +131,14 @@ def divs_sum_csved(dividends):
     if not dividends:
         return []
 
+    flat_rate = round_up(sum(div.flat_rate_tax for div in dividends))
+    tax_paid = round_up(sum(div.pln_tax_paid for div in dividends))
+    tax_diff = flat_rate - tax_paid
+
     return [
-        f"tax flat-rate,{sum(div.flat_rate_tax for div in dividends):.2f},PIT-38/G/45",
-        f"tax paid,{sum(div.pln_tax_paid for div in dividends):.2f},PIT-38/G/46",
-        f"tax diff,{sum(div.pln_tax_due for div in dividends):.2f},PIT-38/G/47",
+        f"tax flat-rate,{flat_rate:.2f},PIT-38/G/45",
+        f"tax paid,{tax_paid:.2f},PIT-38/G/46",
+        f"tax diff,{tax_diff:.2f},PIT-38/G/47",
     ]
 
 
