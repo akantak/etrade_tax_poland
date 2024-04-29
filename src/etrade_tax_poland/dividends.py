@@ -90,23 +90,22 @@ def get_stock_dividend_from_text(text):
     if not dividend_lines:
         return {}
 
-    # latest 2023 doc version
     if "Qualified" in dividend_lines[0]:
+        # latest 2023 doc version
         year = year_line.split()[-1]
-        return Dividend(
-            f"{dividend_lines[0].split()[0]}/{year}",
-            dividend_lines[0].split()[-1].replace("$", ""),
-            dividend_lines[1].split()[-1][1:-1],
-            dividend_lines[2].split()[-1][1:-1],
-        )
-    # before 09.2023 doc version
-    date = dividend_lines[0].split()[0]
-    return Dividend(
-        f"{date[:-2]}20{date[-2:]}",
-        dividend_lines[3].split()[-1].replace("$", ""),
-        dividend_lines[3].split()[-2],
-        dividend_lines[5].split()[-1][1:],
-    )
+        pay_date = f"{dividend_lines[0].split()[0]}/{year}"
+        gross = dividend_lines[0].split()[-1].replace("$", "")
+        tax = dividend_lines[1].split()[-1][1:-1]
+        net = dividend_lines[2].split()[-1][1:-1]
+    else:
+        # before 09.2023 doc version
+        date = dividend_lines[0].split()[0]
+        pay_date = f"{date[:-2]}20{date[-2:]}"
+        gross = dividend_lines[3].split()[-1].replace("$", "")
+        tax = dividend_lines[3].split()[-2]
+        net = dividend_lines[5].split()[-1][1:]
+
+    return Dividend(pay_date, gross, tax, net)
 
 
 def get_liquidity_dividends_from_text(text):
