@@ -95,7 +95,7 @@ def get_stock_dividend_from_text(text):
         year = year_line.split()[-1]
         return Dividend(
             f"{dividend_lines[0].split()[0]}/{year}",
-            dividend_lines[0].split()[-1],
+            dividend_lines[0].split()[-1].replace("$", ""),
             dividend_lines[1].split()[-1][1:-1],
             dividend_lines[2].split()[-1][1:-1],
         )
@@ -103,7 +103,7 @@ def get_stock_dividend_from_text(text):
     date = dividend_lines[0].split()[0]
     return Dividend(
         f"{date[:-2]}20{date[-2:]}",
-        dividend_lines[3].split()[-1],
+        dividend_lines[3].split()[-1].replace("$", ""),
         dividend_lines[3].split()[-2],
         dividend_lines[5].split()[-1][1:],
     )
