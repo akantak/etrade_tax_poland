@@ -146,12 +146,10 @@ def process_dividend_docs(directory):
         text = fh.file_to_text(f"{directory}/{filename}")
         if dividend := get_stock_dividend_from_text(text):
             dividend.file = filename
-            dividend.insert_currencies_ratio(*nbp.date_to_usd_pln(dividend.pay_date))
             dividends.append(dividend)
         if ldivs := get_liquidity_dividends_from_text(text):
             for ldiv in ldivs:
                 ldiv.file = filename
-                ldiv.insert_currencies_ratio(*nbp.date_to_usd_pln(ldiv.pay_date))
             dividends += ldivs
 
     for dividend in dividends:
