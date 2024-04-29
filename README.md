@@ -4,7 +4,7 @@ Use at your own risk! Do not treat it as a tax consultancy.
 
 ## General
 
-Those scripts were initally designed to calculate taxes from E*TRADE dividends for Intel employees.
+Those scripts were initally designed to calculate taxes from E\*TRADE dividends for Intel employees.
 Stock sales/vesting and liquidity funds were added later. It was not tested with any other entities.
 
 ### Installation
@@ -12,7 +12,7 @@ Stock sales/vesting and liquidity funds were added later. It was not tested with
 Install python module:
 
 ```bash
-python3 -m pip install https://github.com/akantak/etrade_tax_poland/archive/main.zip
+python3 -m pip install --upgrade git+https://github.com/akantak/etrade_tax_poland.git@v0.0.10
 ```
 
 ### Preparation
