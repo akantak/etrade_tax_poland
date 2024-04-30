@@ -12,7 +12,7 @@ Stock sales/vesting and liquidity funds were added later. It was not tested with
 Install python module:
 
 ```bash
-python3 -m pip install --upgrade git+https://github.com/akantak/etrade_tax_poland.git@v0.0.10
+python3 -m pip install --upgrade git+https://github.com/akantak/etrade_tax_poland.git@v0.0.11
 ```
 
 ### Preparation
@@ -45,7 +45,7 @@ and review if any stock purchase data were not already included in previous PITs
 ## Dividends
 
 There is a script prepared that calculates paid tax vs due tax for stock dividends
-based on multiple E*Trade statements.
+based on multiple E\*Trade statements.
 
 Also, there is a second dividend type for dividends paid from the Liquidity Fund.
 For those, there is no tax paid in the US.
@@ -61,7 +61,7 @@ The amounts in USD have to be converted with the NBP ratio from the day before g
 
 ### Dividends documents
 
-Prepare a directory with all the statements from E*TRADE to be considered during tax calculation.
+Prepare a directory with all the statements from E\*TRADE to be considered during tax calculation.
 Those statements are named like: `Brokerage Statement (...).pdf`
 or `MS_ClientStatements_(...).pdf`. Multiple files allowed.
 
