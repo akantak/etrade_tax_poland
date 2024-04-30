@@ -4,7 +4,7 @@ from datetime import datetime
 
 from . import files_handling as fh
 from . import nbp
-from .common import ISO_DATE, TAX_PL, round_up
+from .common import ISO_DATE, TAX_PL, cash_float, round_up
 
 
 class Dividend:
@@ -85,25 +85,35 @@ def get_stock_dividend_from_text(text):
         ):
             dividend_lines = lines[i : i + 6]
         if "Account DetailCLIENT STATEMENT" in line:
+            # 'Account DetailCLIENT STATEMENT     For the Period September 1 -30, 2023'
             year_line = line
 
     if not dividend_lines:
         return {}
 
     if "Qualified" in dividend_lines[0]:
-        # latest 2023 doc version
+        # latest 2023 doc version, example:
+        # [0] '12/1 Qualified Dividend INTEL CORP 125.00'
+        # [1] '12/1 Tax Withholding INTEL CORP (18.75)'
+        # [2] '12/4 Funds Transferred WIRE OUT (106.25)'
         str_date = f"{dividend_lines[0].split()[0]}/{year_line.split()[-1]}"
         pay_date = datetime.strptime(str_date, "%m/%d/%Y")
-        gross = dividend_lines[0].split()[-1].replace("$", "")
-        tax = dividend_lines[1].split()[-1][1:-1]
-        net = dividend_lines[2].split()[-1][1:-1]
+        gross = cash_float(dividend_lines[0].split()[-1])
+        tax = cash_float(dividend_lines[1].split()[-1])
+        net = cash_float(dividend_lines[2].split()[-1])
     else:
-        # before 09.2023 doc version
+        # before 09.2023 doc version, example:
+        # [0] '03/01/23 Dividend INTEL CORP'
+        # [1] 'CASH DIV  ON     264 SHS'
+        # [2] 'REC 02/07/23 PAY 03/01/23'
+        # [3] 'NON-RES TAX WITHHELD @ .15000INTC 54.75 365.00'
+        # [4] 'TOTALDIVIDENDS&INTERESTACTIVITY $54.75 $365.00'
+        # [5] 'NETDIVIDENDS&INTERESTACTIVITY $310.25'
         date = dividend_lines[0].split()[0]
         pay_date = datetime.strptime(f"{date[:-2]}20{date[-2:]}", "%m/%d/%Y")
-        gross = dividend_lines[3].split()[-1].replace("$", "")
-        tax = dividend_lines[3].split()[-2]
-        net = dividend_lines[5].split()[-1][1:]
+        gross = cash_float(dividend_lines[3].split()[-1])
+        tax = cash_float(dividend_lines[3].split()[-2])
+        net = cash_float(dividend_lines[5].split()[-1])
 
     return Dividend(pay_date, gross, tax, net)
 
@@ -115,13 +125,18 @@ def get_liquidity_dividends_from_text(text):
     lines = text.split("\n")
     for i, line in enumerate(lines):
         if "Account DetailCLIENT STATEMENT" in line:
+            # 'Account DetailCLIENT STATEMENT     For the Period September 1 -30, 2023'
             year = line.split()[-1]
         if "Dividend TREASURY LIQUIDITY FUND" in line:
             date = datetime.strptime(f"{line.split()[0]}/{year}", "%m/%d/%Y")
             if "Transaction Reportable for the Prior Year" in line:
-                amount = lines[i].split("$")[-1]
+                # '1/2 Dividend TREASURY LIQUIDITY FUND Transaction \
+                # Reportable for the Prior Year. $0.01'
+                amount = cash_float(lines[i].split()[-1])
             else:
-                amount = lines[i + 1].split("PAYMENT")[-1].replace("$", "")
+                # [i]   '10/2 Dividend TREASURY LIQUIDITY FUND'
+                # [i+1] 'DIV PAYMENT$0.23'
+                amount = cash_float(lines[i + 1].split("PAYMENT")[-1])
             ldivs.append(Dividend(date, amount, 0, amount))
     return ldivs
 

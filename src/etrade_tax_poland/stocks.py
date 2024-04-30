@@ -4,7 +4,7 @@ from datetime import datetime
 
 from . import files_handling as fh
 from . import nbp
-from .common import ISO_DATE, TAX_PL
+from .common import ISO_DATE, TAX_PL, cash_float
 
 
 class Trade:
@@ -193,11 +193,6 @@ class StockEvent:
         )
 
 
-def cash_to_float(str_number):
-    """Cast cash string with comma separator to float."""
-    return float(str_number.replace(",", ""))
-
-
 def espp_from_text(text):
     """Find all ESPP bought stocks data in text."""
     if "EMPLOYEE STOCK PLAN PURCHASE CONFIRMATION" not in text:
@@ -206,16 +201,21 @@ def espp_from_text(text):
     stock = EsppStock()
     for line in lines:
         if "Purchase Date" in line:
-            stock.purchase_date = datetime.strptime(line.split()[2][:-6], "%m-%d-%Y")
+            # 'Purchase Date 02-18-2022Shares Purchased to Date in Current Offering'
+            date_str = line.split()[2].replace("Shares", "")
+            stock.purchase_date = datetime.strptime(date_str, "%m-%d-%Y")
         if "Foreign Contributions" in line:
-            stock.pln_contribution_gross = cash_to_float(line.split()[-1])
+            # 'Foreign Contributions 10,000.00'
+            stock.pln_contribution_gross = cash_float(line.split()[-1])
         if "Average Exchange Rate" in line:
-            stock.vest_day_ratio = float(line.split()[-1][1:])
+            # 'Average Exchange Rate $0.250000'
+            stock.vest_day_ratio = cash_float(line.split()[-1])
         if "Amount Refunded" in line:
-            stock.usd_contribution_refund = float(line.split()[-1][2:-1])
+            # 'Amount Refunded ($2.00)'
+            stock.usd_contribution_refund = cash_float(line.split()[-1])
         if "Shares Purchased" in line and len(line.split()) == 3:
+            # 'Shares Purchased 50.0000'
             stock.shares_purchased = int(float(line.split()[-1]))
-
     stock.calculate_pln_contribution_net()
     return stock
 
@@ -228,11 +228,14 @@ def rs_from_text(text):
     rest = RestrictedStock()
     for line in lines:
         if "Release Date" in line:
+            # 'Plan I06Release Date 01-31-2022'
             rest.release_date = datetime.strptime(line.split()[-1], "%m-%d-%Y")
         if "Shares Released" in line and len(line.split()) == 3:
+            # 'Shares Released 10.0000'
             rest.shares_released = int(float(line.split()[-1]))
         if "Total Gain" in line:
-            rest.release_gain = cash_to_float(line.split()[-1][1:])
+            # 'Total Gain $500.00'
+            rest.release_gain = cash_float(line.split()[-1])
     return rest
 
 
@@ -244,11 +247,13 @@ def trade_from_text(text):
     trade = Trade()
     for line in lines:
         if "Stock Plan" in line:
+            # 05/10/22 05/12/22 61 INTC SELL 50 $50.00 Stock Plan PRINCIPAL $2,500.00
             trade.shares_sold = int(line.split()[5])
             date_str = f"{line.split()[0][:-2]}20{line.split()[0][-2:]}"
             trade.trade_date = datetime.strptime(date_str, "%m/%d/%Y")
         if "NET AMOUNT" in line:
-            trade.usd_net_income = cash_to_float(line.split()[-1][1:])
+            # 'NET AMOUNT $2,499.48'
+            trade.usd_net_income = cash_float(line.split()[-1])
     return trade
 
 
