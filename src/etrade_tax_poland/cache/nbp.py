@@ -1,14 +1,15 @@
 """Implement NBP currencies ratios gathering."""
 
 import datetime
-import json
 import os
 from time import sleep
 
 import requests
 
+from .cache_file import CacheFile
 
-class NbpRatiosCache:
+
+class NbpRatiosCache(CacheFile):
     """Cache data instead of always requesting from NBP."""
 
     date_format = "%Y-%m-%d"
@@ -16,27 +17,7 @@ class NbpRatiosCache:
 
     def __init__(self):
         """Initialize objects and fields."""
-        self.cache_file = f"{os.path.dirname(os.path.abspath(__file__))}/nbp_cache.json"
-        self.read_cache()
-
-    def read_cache(self):
-        """Read cache file."""
-        if not os.path.isfile(self.cache_file):
-            self.cache = {"_": ""}
-            return
-        with open(self.cache_file, "r", encoding="utf-8") as file:
-            self.cache = json.load(file)
-
-    def write_cache(self):
-        """Write cache file."""
-        json_dump_params = {
-            "sort_keys": True,
-            "indent": 2,
-            "separators": (",", ": "),
-        }
-        with open(self.cache_file, "w", encoding="utf-8") as file:
-            json.dump(self.cache, file, **json_dump_params)
-            file.write("\n")
+        super().__init__(f"{os.path.dirname(os.path.abspath(__file__))}/.nbp_cache.json")
 
     def get_ratio(self, date_obj):
         """Get ratio from cache if available, otherwise request from NBP."""

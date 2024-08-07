@@ -1,21 +1,21 @@
-"""Find all statements for dividents in a directory and count the due tax."""
+"""Find all statements for dividends in a directory and count the due tax."""
 
 from datetime import datetime
 
 from . import files_handling as fh
-from . import nbp
+from .cache.nbp import date_to_usd_pln
 from .common import ISO_DATE, TAX_PL, cash_float, round_up
 
 
 class Dividend:
     """Keep all dividend data in an object."""
 
-    def __init__(self, pay_date, gross, tax, net):
+    def __init__(self, pay_date: datetime, gross: float, tax: float, net: float):
         """Initialize an object."""
         self.pay_date = pay_date
-        self.usd_gross = float(gross)
-        self.usd_tax = float(tax)
-        self.usd_net = float(net)
+        self.usd_gross = gross
+        self.usd_tax = tax
+        self.usd_net = net
         self.ratio_date = datetime.fromtimestamp(0)
         self.ratio_value = 0.0
         self.pln_gross = 0.0
@@ -78,11 +78,7 @@ def get_stock_dividend_from_text(text):
     lines = text.split("\n")
 
     for i, line in enumerate(lines):
-        if (
-            "Dividend " in line
-            and "Next Dividend Payable" not in line
-            and "LIQUIDITY" not in line
-        ):
+        if "Dividend " in line and "Next Dividend Payable" not in line and "LIQUIDITY" not in line:
             dividend_lines = lines[i : i + 6]
         if "Account DetailCLIENT STATEMENT" in line:
             # 'Account DetailCLIENT STATEMENT     For the Period September 1 -30, 2023'
@@ -172,7 +168,7 @@ def process_dividend_docs(directory):
             dividends += ldivs
 
     for dividend in dividends:
-        dividend.insert_currencies_ratio(*nbp.date_to_usd_pln(dividend.pay_date))
+        dividend.insert_currencies_ratio(*date_to_usd_pln(dividend.pay_date))
 
     fh.save_csv("_dividend.csv", Dividend.csv_header(), [d.csved() for d in dividends])
     fh.save_csv("dividends_summary.csv", fh.sum_header(), divs_sum_csved(dividends))

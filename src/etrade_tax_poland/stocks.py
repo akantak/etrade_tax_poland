@@ -3,7 +3,8 @@
 from datetime import datetime
 
 from . import files_handling as fh
-from . import nbp
+from .cache.intc import date_to_intc_price
+from .cache.nbp import date_to_usd_pln
 from .common import ISO_DATE, TAX_PL, cash_float
 
 
@@ -68,6 +69,9 @@ class EsppStock:
         self.vest_day_ratio = 0.0
         self.shares_purchased = 0
         self.file = ""
+        self.period_start_value = 0.0
+        self.period_end_value = 0.0
+        self.purchase_price_base = 0.0
 
     def calculate_pln_contribution_net(self):
         """Based on set values, calculated net pln contribution."""
@@ -112,7 +116,17 @@ class RestrictedStock:
         self.release_date = datetime.fromtimestamp(0)
         self.shares_released = 0
         self.release_gain = 0.0
+        self.ratio_date = datetime.fromtimestamp(0)
+        self.ratio_value = 0.0
+        self.stock_price_pln = 0.0
         self.file = ""
+
+    def insert_currencies_ratio(self, ratio_date, ratio_value):
+        """Insert currencies ratio and calculate dependent variables."""
+        self.ratio_date = ratio_date
+        self.ratio_value = ratio_value
+        total_pln_gain = ratio_value * self.release_gain
+        self.stock_price_pln = total_pln_gain / self.shares_released
 
     def csved(self):
         """Csved class object."""
@@ -121,6 +135,7 @@ class RestrictedStock:
                 self.release_date.strftime(ISO_DATE),
                 f"{self.shares_released}",
                 f"{self.release_gain:.2f}",
+                f"{self.stock_price_pln:.2f}",
                 self.file,
             ]
         )
@@ -133,6 +148,7 @@ class RestrictedStock:
                 "VEST_DATE",
                 "SHARES_RELEASED",
                 "USD_GAIN",
+                "STOCK_PRICE_PLN",
                 "FILE",
             ]
         )
@@ -146,6 +162,8 @@ class StockEvent:
         self.buy_date = 0
         self.buy_shares_count = 0
         self.buy_tax_deductible = 0
+        self.buy_price_pln = 0
+        self.initial_price_pln = 0
         self.sale_date = 0
         self.sale_shares_count = 0
         self.sale_income = 0
@@ -153,15 +171,23 @@ class StockEvent:
             self.buy_date = base_object.purchase_date
             self.buy_shares_count = base_object.shares_purchased
             self.buy_tax_deductible = base_object.pln_contribution_net
+            self.buy_price_pln = self.buy_tax_deductible / self.buy_shares_count
         elif isinstance(base_object, RestrictedStock):
             self.buy_date = base_object.release_date
             self.buy_shares_count = base_object.shares_released
             self.buy_tax_deductible = 0.0
+            self.buy_price_pln = base_object.stock_price_pln
         elif isinstance(base_object, Trade):
             self.sale_date = base_object.trade_date
             self.sale_shares_count = base_object.shares_sold
             self.sale_income = base_object.pln_income
         self.file = base_object.file
+
+    def insert_initial_price_pln(self):
+        """Insert intc price and calculate dependent variables."""
+        _, intc = date_to_intc_price(self.buy_date)
+        _, ratio = date_to_usd_pln(self.buy_date)
+        self.initial_price_pln = intc * ratio
 
     def csved(self):
         """Csved class object."""
@@ -170,6 +196,8 @@ class StockEvent:
                 self.buy_date.strftime(ISO_DATE) if self.buy_date else "",
                 f"{self.buy_shares_count}" if self.buy_shares_count else "",
                 f"{self.buy_tax_deductible:.2f}" if self.buy_tax_deductible else "",
+                f"{self.buy_price_pln:.2f}" if self.buy_price_pln else "",
+                f"{self.initial_price_pln:.2f}" if self.initial_price_pln else "",
                 self.sale_date.strftime(ISO_DATE) if self.sale_date else "",
                 f"{self.sale_shares_count}" if self.sale_shares_count else "",
                 f"{self.sale_income:.2f}" if self.sale_income else "",
@@ -185,6 +213,8 @@ class StockEvent:
                 "BUY_DATE",
                 "BUY_SHARES_COUNT",
                 "BUY_TAX_DEDUCT",
+                "BUY_PRICE_PLN",
+                "INITIAL_PRICE",
                 "SELL_DATE",
                 "SELL_SHARES_COUNT",
                 "SELL_INCOME",
@@ -199,7 +229,7 @@ def espp_from_text(text):
         return ""
     lines = text.split("\n")
     stock = EsppStock()
-    for line in lines:
+    for i, line in enumerate(lines):
         if "Purchase Date" in line:
             # 'Purchase Date 02-18-2022Shares Purchased to Date in Current Offering'
             date_str = line.split()[2].replace("Shares", "")
@@ -216,6 +246,12 @@ def espp_from_text(text):
         if "Shares Purchased" in line and len(line.split()) == 3:
             # 'Shares Purchased 50.0000'
             stock.shares_purchased = int(float(line.split()[-1]))
+        if "Grant Date Market Value" in line:
+            stock.period_start_value = cash_float(line.split()[-1])
+        if "Purchase Value per Share" in line:
+            stock.period_end_value = cash_float(line.split()[-1])
+        if "Purchase Price per Share" in line:
+            stock.purchase_price_base = cash_float(lines[i + 1].split()[-2])
     stock.calculate_pln_contribution_net()
     return stock
 
@@ -293,13 +329,16 @@ def process_stock_docs(directory):
             espps.append(espp)
         if rest := rs_from_text(text):
             rest.file = full_path
+            rest.insert_currencies_ratio(*date_to_usd_pln(rest.release_date))
             rests.append(rest)
         if trade := trade_from_text(text):
             trade.file = full_path
-            trade.insert_currencies_ratio(*nbp.date_to_usd_pln(trade.trade_date))
+            trade.insert_currencies_ratio(*date_to_usd_pln(trade.trade_date))
             trades.append(trade)
 
     ses = [StockEvent(x) for x in espps + rests + trades]
+    for event in ses:
+        event.insert_initial_price_pln()
 
     fh.save_csv("_espp.csv", EsppStock.csv_header(), [e.csved() for e in espps])
     fh.save_csv("_rs.csv", RestrictedStock.csv_header(), [r.csved() for r in rests])
