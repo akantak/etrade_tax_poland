@@ -14,7 +14,7 @@ with potential selling price.
 Install python module:
 
 ```bash
-python3 -m pip install --upgrade git+https://github.com/akantak/etrade_tax_poland.git@v0.0.11
+python3 -m pip install --upgrade git+https://github.com/akantak/etrade_tax_poland.git@v0.0.12
 ```
 
 ### Preparation
