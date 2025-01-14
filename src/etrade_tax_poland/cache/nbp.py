@@ -61,4 +61,4 @@ def date_to_usd_pln(date_obj):
             break
         except ValueError:
             date_obj -= datetime.timedelta(days=1)
-    return (date_obj, ratio)
+    return date_obj, ratio

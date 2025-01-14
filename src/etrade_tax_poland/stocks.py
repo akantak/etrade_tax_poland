@@ -5,7 +5,7 @@ from datetime import datetime
 from . import files_handling as fh
 from .cache.intc import date_to_intc_price
 from .cache.nbp import date_to_usd_pln
-from .common import ISO_DATE, TAX_PL, cash_float
+from .maths import ISO_DATE, cash_float
 
 
 class Trade:
@@ -21,35 +21,6 @@ class Trade:
         self.pln_income = 0.0
         self.file = ""
 
-    def csved(self):
-        """Csved class object."""
-        return ",".join(
-            [
-                self.trade_date.strftime(ISO_DATE),
-                f"{self.usd_net_income:.2f}",
-                f"{self.shares_sold}",
-                self.ratio_date.strftime(ISO_DATE),
-                f"{self.ratio_value:.6f}",
-                f"{self.pln_income:.2f}",
-                self.file,
-            ]
-        )
-
-    @staticmethod
-    def csv_header():
-        """Return table header for CSVed objects."""
-        return ",".join(
-            [
-                "TRADE_DATE",
-                "USD_NET_INCOME",
-                "SHARES_SOLD",
-                "RATIO_DATE",
-                "RATIO_VALUE",
-                "PLN_INCOME",
-                "FILE",
-            ]
-        )
-
     def insert_currencies_ratio(self, ratio_date, ratio_value):
         """Insert currencies ratio and calculate dependent variables."""
         self.ratio_date = ratio_date
@@ -63,6 +34,7 @@ class EsppStock:
     def __init__(self):
         """Init espp bought stock object."""
         self.purchase_date = datetime.fromtimestamp(0)
+        self.initial_price_pln = 0.0
         self.pln_contribution_gross = 0.0
         self.usd_contribution_refund = 0.0
         self.pln_contribution_net = 0.0
@@ -78,34 +50,11 @@ class EsppStock:
         refund = round(self.usd_contribution_refund / self.vest_day_ratio, 2)
         self.pln_contribution_net = self.pln_contribution_gross - refund
 
-    def csved(self):
-        """Csved class object."""
-        return ",".join(
-            [
-                self.purchase_date.strftime(ISO_DATE),
-                f"{self.pln_contribution_gross:.2f}",
-                f"{self.usd_contribution_refund:.2f}",
-                f"{self.vest_day_ratio:.6f}",
-                f"{self.pln_contribution_net:.2f}",
-                f"{self.shares_purchased}",
-                self.file,
-            ]
-        )
-
-    @staticmethod
-    def csv_header():
-        """Return table header for CSVed objects."""
-        return ",".join(
-            [
-                "VEST_DATE",
-                "PLN_CONTRIB_GROSS",
-                "USD_CONTRIB_REFUND",
-                "VEST_DAY_RATIO",
-                "PLN_CONTRIB_NET",
-                "SHARES_PURCHASED",
-                "FILE",
-            ]
-        )
+    def insert_initial_price_pln(self):
+        """Insert intc price and calculate dependent variables."""
+        _, intc = date_to_intc_price(self.purchase_date)
+        _, ratio = date_to_usd_pln(self.purchase_date)
+        self.initial_price_pln = intc * ratio
 
 
 class RestrictedStock:
@@ -119,39 +68,16 @@ class RestrictedStock:
         self.ratio_date = datetime.fromtimestamp(0)
         self.ratio_value = 0.0
         self.stock_price_pln = 0.0
+        self.initial_price_pln = 0.0
         self.file = ""
 
-    def insert_currencies_ratio(self, ratio_date, ratio_value):
+    def insert_ratios(self):
         """Insert currencies ratio and calculate dependent variables."""
-        self.ratio_date = ratio_date
-        self.ratio_value = ratio_value
-        total_pln_gain = ratio_value * self.release_gain
+        self.ratio_date, self.ratio_value = date_to_usd_pln(self.release_date)
+        total_pln_gain = self.ratio_value * self.release_gain
         self.stock_price_pln = total_pln_gain / self.shares_released
-
-    def csved(self):
-        """Csved class object."""
-        return ",".join(
-            [
-                self.release_date.strftime(ISO_DATE),
-                f"{self.shares_released}",
-                f"{self.release_gain:.2f}",
-                f"{self.stock_price_pln:.2f}",
-                self.file,
-            ]
-        )
-
-    @staticmethod
-    def csv_header():
-        """Return table header for CSVed objects."""
-        return ",".join(
-            [
-                "VEST_DATE",
-                "SHARES_RELEASED",
-                "USD_GAIN",
-                "STOCK_PRICE_PLN",
-                "FILE",
-            ]
-        )
+        _, intc = date_to_intc_price(self.release_date)
+        self.initial_price_pln = intc * self.ratio_value
 
 
 class StockEvent:
@@ -172,22 +98,17 @@ class StockEvent:
             self.buy_shares_count = base_object.shares_purchased
             self.buy_tax_deductible = base_object.pln_contribution_net
             self.buy_price_pln = self.buy_tax_deductible / self.buy_shares_count
+            self.initial_price_pln = base_object.initial_price_pln
         elif isinstance(base_object, RestrictedStock):
             self.buy_date = base_object.release_date
             self.buy_shares_count = base_object.shares_released
             self.buy_tax_deductible = 0.0
-            self.buy_price_pln = base_object.stock_price_pln
+            self.initial_price_pln = base_object.initial_price_pln
         elif isinstance(base_object, Trade):
             self.sale_date = base_object.trade_date
             self.sale_shares_count = base_object.shares_sold
             self.sale_income = base_object.pln_income
         self.file = base_object.file
-
-    def insert_initial_price_pln(self):
-        """Insert intc price and calculate dependent variables."""
-        _, intc = date_to_intc_price(self.buy_date)
-        _, ratio = date_to_usd_pln(self.buy_date)
-        self.initial_price_pln = intc * ratio
 
     def csved(self):
         """Csved class object."""
@@ -201,7 +122,6 @@ class StockEvent:
                 self.sale_date.strftime(ISO_DATE) if self.sale_date else "",
                 f"{self.sale_shares_count}" if self.sale_shares_count else "",
                 f"{self.sale_income:.2f}" if self.sale_income else "",
-                self.file,
             ]
         )
 
@@ -212,13 +132,12 @@ class StockEvent:
             [
                 "BUY_DATE",
                 "BUY_SHARES_COUNT",
-                "BUY_TAX_DEDUCT",
-                "BUY_PRICE_PLN",
-                "INITIAL_PRICE",
+                "TAX_DEDUCTIBLE",
+                "REAL_BUY_PRICE_PLN",
+                "DATE_BUY_PRICE_PLN",
                 "SELL_DATE",
                 "SELL_SHARES_COUNT",
                 "SELL_INCOME",
-                "FILE",
             ]
         )
 
@@ -226,7 +145,7 @@ class StockEvent:
 def espp_from_text(text):
     """Find all ESPP bought stocks data in text."""
     if "EMPLOYEE STOCK PLAN PURCHASE CONFIRMATION" not in text:
-        return ""
+        return []
     lines = text.split("\n")
     stock = EsppStock()
     for i, line in enumerate(lines):
@@ -253,13 +172,14 @@ def espp_from_text(text):
         if "Purchase Price per Share" in line:
             stock.purchase_price_base = cash_float(lines[i + 1].split()[-2])
     stock.calculate_pln_contribution_net()
+    stock.insert_initial_price_pln()
     return stock
 
 
 def rs_from_text(text):
     """Find all Restricted Stocks vested data in text."""
     if "EMPLOYEE STOCK PLAN RELEASE CONFIRMATION" not in text:
-        return ""
+        return []
     lines = text.split("\n")
     rest = RestrictedStock()
     for line in lines:
@@ -272,13 +192,14 @@ def rs_from_text(text):
         if "Total Gain" in line:
             # 'Total Gain $500.00'
             rest.release_gain = cash_float(line.split()[-1])
+    rest.insert_ratios()
     return rest
 
 
 def trade_from_text(text):
     """Find all trade data in text."""
     if "TRADECONFIRMATION" not in text:
-        return ""
+        return []
     lines = text.split("\n")
     trade = Trade()
     for line in lines:
@@ -290,31 +211,11 @@ def trade_from_text(text):
         if "NET AMOUNT" in line:
             # 'NET AMOUNT $2,499.48'
             trade.usd_net_income = cash_float(line.split()[-1])
+    trade.insert_currencies_ratio(*date_to_usd_pln(trade.trade_date))
     return trade
 
 
-def stocks_sum_csved(stocks):
-    """Extract sum up lines from stocks list."""
-    if not stocks:
-        return []
-
-    other_income = sum(s.sale_income for s in stocks)
-    tax_deductible = sum(s.buy_tax_deductible for s in stocks)
-    profit = other_income - tax_deductible
-    rounded_profit = int(round(profit, 0))
-    tax_base = rounded_profit * TAX_PL
-    tax_rounded = int(round(tax_base, 0))
-    return [
-        f"other income,{other_income:.2f},PIT-38/C/22&24",
-        f"tax deductible,{tax_deductible:.2f},PIT-38/C/23&25",
-        f"profit,{profit:.2f},PIT-38/C/26",
-        f"profit_rounded,{rounded_profit},PIT-38/C/29",
-        f"tax_base,{tax_base:.2f},PIT-38/C/31",
-        f"tax_rounded,{tax_rounded},PIT-38/C/33",
-    ]
-
-
-def process_stock_docs(directory):
+def process_stock_docs(directory, debug=False):
     """Process all docs and find stocks data."""
     files = fh.pdfs_in_dir(directory)
     espps = []  # Employee Stock Purchase Plan
@@ -329,19 +230,13 @@ def process_stock_docs(directory):
             espps.append(espp)
         if rest := rs_from_text(text):
             rest.file = full_path
-            rest.insert_currencies_ratio(*date_to_usd_pln(rest.release_date))
             rests.append(rest)
         if trade := trade_from_text(text):
             trade.file = full_path
-            trade.insert_currencies_ratio(*date_to_usd_pln(trade.trade_date))
             trades.append(trade)
 
     ses = [StockEvent(x) for x in espps + rests + trades]
-    for event in ses:
-        event.insert_initial_price_pln()
 
-    fh.save_csv("_espp.csv", EsppStock.csv_header(), [e.csved() for e in espps])
-    fh.save_csv("_rs.csv", RestrictedStock.csv_header(), [r.csved() for r in rests])
-    fh.save_csv("_trade.csv", Trade.csv_header(), [t.csved() for t in trades])
+    if debug:
+        fh.write_objects_debug_json({"espp": espps, "rs": rests, "trade": trades}, "stocks.json")
     fh.save_csv("_stocks.csv", StockEvent.csv_header(), [s.csved() for s in ses])
-    fh.save_csv("stocks_summary.csv", fh.sum_header(), stocks_sum_csved(ses))

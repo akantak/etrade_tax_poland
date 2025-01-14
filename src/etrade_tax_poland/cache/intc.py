@@ -48,10 +48,9 @@ class IntcPricesCache(CacheFile):
 
         response = requests.get(url, headers=headers, params=params, timeout=60)
 
-        cache = {"_": ""}
         if response.status_code == 200:
             for entry in response.json()["results"]["history"][0]["eoddata"]:
-                cache[entry["date"]] = entry["close"]
+                self.cache[entry["date"]] = entry["close"]
             self.write_cache()
         else:
             print(f"Request failed with status code: {response.status_code}.")

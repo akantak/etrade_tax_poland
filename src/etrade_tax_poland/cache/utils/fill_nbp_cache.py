@@ -1,4 +1,9 @@
-"""Fill the NBP cache."""
+"""
+Fill the NBP cache.
+
+Example usage:
+python3 -m etrade_tax_poland.cache.utils.fill_nbp_cache
+"""
 
 import datetime
 

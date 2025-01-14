@@ -4,8 +4,10 @@ Use at your own risk! Do not treat it as a tax consultancy.
 
 ## General
 
-Those scripts were initally designed to calculate taxes from E\*TRADE dividends for Intel employees.
+Those scripts were initially designed to calculate taxes from E\*TRADE dividends for Intel employees.
 Stock sales/vesting and liquidity funds were added later. It was not tested with any other entities.
+Those scripts also calculates buy/vest day price in PLN for stock, so user can use cross-check that
+with potential selling price.
 
 ### Installation
 
@@ -32,6 +34,17 @@ or pass the directory as an argument (if the statements are in ex. `/tmp/stateme
 
 ```bash
 python3 -m etrade_tax_poland /tmp/statements
+```
+
+#### Additional parameter flags
+
+- `-x` - don't compile to xlsx, data would stay in csv files
+- `-d` - debug version, would save all objects in json format to *.json files
+
+Example command using all possible parameters
+
+```bash
+python3 -m etrade_tax_poland -d -x /tmp/statements
 ```
 
 ### Output
@@ -67,6 +80,15 @@ or `MS_ClientStatements_(...).pdf`. Multiple files allowed.
 
 Those statements can be found on <https://edoc.etrade.com/e/t/onlinedocs/docsearch?doc_type=stmt>.
 
+### Dividends PIT-38 filling
+
+Open dividends' spreadsheet. Start with filtering data for selected year only.
+Then, in PIT-38, section E:
+
+- sum of `PLN_TAX_TOTAL` column values for selected year should be put in field 34
+- sum of `PLN_TAX_PAID` column values for selected year should be put in field 35
+- sum of `PLN_TAX_DUE` column values for selected year should be put in field 36
+
 ## Stocks
 
 Parse stocks purchase/vest/sell documents.
@@ -88,3 +110,34 @@ Those files will be named `getEsppConfirmation.pdf` or `getReleaseConfirmation.p
 To get trade confirmations, go to <https://edoc.etrade.com/e/t/onlinedocs/docsearch?doc_type=cnf>
 and download the required confirmations.
 Those files will be named `ETRADE Brokerage Trade Confirmation (...).pdf`.
+
+### Stocks PIT-38 filling
+
+Open stocks' spreadsheet. It contains all three types of actions:
+
+- espp (stocks bought)
+- rs (stocks vested)
+- trade (stocks sold)
+
+Sell rows are shifted on purpose, so those can be cut and pasted to according acquisition action.
+If it is Restricted Stock, there is nothing that is deductible from tax.
+If it is Employee Stock Purchase Plan, the net contribution is deductible.
+
+Match all selling actions with the corresponding acquisition action, based on shares count.
+According to the law, stocks are sold FIFO (first in first out). If you did not sell the
+oldest stocks first, do the matching on your own.
+Remove the rest of acquisition actions that do not have a match, to not pollute the tax deduct.
+
+PLN prices (`REAL_BUY_PRICE_PLN` and `DATE_BUY_PRICE_PLN`) are for information only.
+
+Following statements are considering these calculations the only ones that are put in PIT-38.
+If it is not true and there are more incomes to be considered, adjust the required fields.
+
+In PIT-38, section C and D:
+
+- sum of `SELL_INCOME` column for selected year should be put fields 21 and 23
+- sum of `BUY_TAX_DEDUCT` columns for selected year should be put in fields 22 and 24
+- difference between fields 23 and 24 should be put in field 25
+- rounded field 25 should be put in field 28
+- field 28 multiplied by tax 19% should be put in field 30
+- rounded field 30 should be put in field 32

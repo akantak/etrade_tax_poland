@@ -4,7 +4,7 @@ from datetime import datetime
 
 from . import files_handling as fh
 from .cache.nbp import date_to_usd_pln
-from .common import ISO_DATE, TAX_PL, cash_float, round_up
+from .maths import ISO_DATE, TAX_PL, cash_float
 
 
 class Dividend:
@@ -29,16 +29,9 @@ class Dividend:
         return ",".join(
             [
                 self.pay_date.strftime(ISO_DATE),
-                f"{self.usd_gross:.2f}",
-                f"{self.usd_tax:.2f}",
-                f"{self.usd_net:.2f}",
-                self.ratio_date.strftime(ISO_DATE),
-                f"{self.ratio_value:.6f}",
-                f"{self.pln_gross:.2f}",
                 f"{self.flat_rate_tax:.2f}",
                 f"{self.pln_tax_paid:.2f}",
                 f"{self.pln_tax_due:.2f}",
-                self.file,
             ]
         )
 
@@ -48,26 +41,18 @@ class Dividend:
         return ",".join(
             [
                 "VEST_DATE",
-                "USD_GROSS",
-                "USD_TAX_PAID",
-                "USD_NET",
-                "RATIO_DATE",
-                "RATIO_VALUE",
-                "PLN_GROSS",
                 "PLN_TAX_TOTAL",
                 "PLN_TAX_PAID",
                 "PLN_TAX_DUE",
-                "FILE",
             ]
         )
 
-    def insert_currencies_ratio(self, ratio_date, ratio_value):
+    def insert_currencies_ratio(self):
         """Insert currencies ratio and calculate dependent variables."""
-        self.ratio_date = ratio_date
-        self.ratio_value = ratio_value
-        self.pln_gross = round(self.usd_gross * ratio_value, 2)
+        self.ratio_date, self.ratio_value = date_to_usd_pln(self.pay_date)
+        self.pln_gross = round(self.usd_gross * self.ratio_value, 2)
         self.flat_rate_tax = round(self.pln_gross * TAX_PL, 2)
-        self.pln_tax_paid = round(self.usd_tax * ratio_value, 2)
+        self.pln_tax_paid = round(self.usd_tax * self.ratio_value, 2)
         self.pln_tax_due = self.flat_rate_tax - self.pln_tax_paid
 
 
@@ -111,7 +96,9 @@ def get_stock_dividend_from_text(text):
         tax = cash_float(dividend_lines[3].split()[-2])
         net = cash_float(dividend_lines[5].split()[-1])
 
-    return Dividend(pay_date, gross, tax, net)
+    dividend = Dividend(pay_date, gross, tax, net)
+    dividend.insert_currencies_ratio()
+    return dividend
 
 
 def get_liquidity_dividends_from_text(text):
@@ -133,27 +120,13 @@ def get_liquidity_dividends_from_text(text):
                 # [i]   '10/2 Dividend TREASURY LIQUIDITY FUND'
                 # [i+1] 'DIV PAYMENT$0.23'
                 amount = cash_float(lines[i + 1].split("PAYMENT")[-1])
-            ldivs.append(Dividend(date, amount, 0, amount))
+            dividend = Dividend(date, amount, 0, amount)
+            dividend.insert_currencies_ratio()
+            ldivs.append(dividend)
     return ldivs
 
 
-def divs_sum_csved(dividends):
-    """Extract sum up lines from dividends list."""
-    if not dividends:
-        return []
-
-    flat_rate = round_up(sum(div.flat_rate_tax for div in dividends))
-    tax_paid = round_up(sum(div.pln_tax_paid for div in dividends))
-    tax_diff = flat_rate - tax_paid
-
-    return [
-        f"tax flat-rate,{flat_rate:.2f},PIT-38/G/45",
-        f"tax paid,{tax_paid:.2f},PIT-38/G/46",
-        f"tax diff,{tax_diff:.2f},PIT-38/G/47",
-    ]
-
-
-def process_dividend_docs(directory):
+def process_dividend_docs(directory, debug=False):
     """Count due tax based on statements files in directory."""
     files = fh.pdfs_in_dir(directory)
     dividends = []
@@ -166,9 +139,6 @@ def process_dividend_docs(directory):
             for ldiv in ldivs:
                 ldiv.file = filename
             dividends += ldivs
-
-    for dividend in dividends:
-        dividend.insert_currencies_ratio(*date_to_usd_pln(dividend.pay_date))
-
+    if debug:
+        fh.write_objects_debug_json({"dividends": dividends}, "dividends.json")
     fh.save_csv("_dividend.csv", Dividend.csv_header(), [d.csved() for d in dividends])
-    fh.save_csv("dividends_summary.csv", fh.sum_header(), divs_sum_csved(dividends))
