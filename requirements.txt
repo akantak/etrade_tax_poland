@@ -1,4 +1,4 @@
 pypdf==4.1.0
-requests
-pyexcel
-pyexcel-xlsx
+requests==2.32.3
+pyexcel==0.7.1
+pyexcel-xlsx==0.6.0
