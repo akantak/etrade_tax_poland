@@ -2,6 +2,11 @@
 
 Use at your own risk! Do not treat it as a tax consultancy.
 
+@akantak: I am an initial author of these scripts. Starting 2025, I'm no longer an Intel employee,
+so I won't have interest, neither the access to PDF files to continue the development.
+
+Feel free to take over and submit PRs.
+
 ## General
 
 Those scripts were initially designed to calculate taxes from E\*TRADE dividends for Intel employees.
