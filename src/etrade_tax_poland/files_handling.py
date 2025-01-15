@@ -18,6 +18,10 @@ def file_to_text(filename):
     """Parse PDF file to text only."""
     reader = PdfReader(filename)
     text = ""
+    # PdfReader shouts errors
+    # "Advanced encoding /NULL not implemented yet"
+    # because encoding is incorrectly set in new pdf trade files
+    # starting 2024
     for page in reader.pages:
         text += page.extract_text() + "\n"
     return text

@@ -198,21 +198,37 @@ def rs_from_text(text):
 
 def trade_from_text(text):
     """Find all trade data in text."""
-    if "TRADECONFIRMATION" not in text:
-        return []
-    lines = text.split("\n")
-    trade = Trade()
-    for line in lines:
-        if "Stock Plan" in line:
-            # 05/10/22 05/12/22 61 INTC SELL 50 $50.00 Stock Plan PRINCIPAL $2,500.00
-            trade.shares_sold = int(line.split()[5])
-            date_str = f"{line.split()[0][:-2]}20{line.split()[0][-2:]}"
-            trade.trade_date = datetime.strptime(date_str, "%m/%d/%Y")
-        if "NET AMOUNT" in line:
-            # 'NET AMOUNT $2,499.48'
-            trade.usd_net_income = cash_float(line.split()[-1])
-    trade.insert_currencies_ratio(*date_to_usd_pln(trade.trade_date))
-    return trade
+    if "TRADECONFIRMATION" in text:
+        lines = text.split("\n")
+        trade = Trade()
+        for line in lines:
+            if "Stock Plan" in line:
+                # 05/10/22 05/12/22 61 INTC SELL 50 $50.00 Stock Plan PRINCIPAL $2,500.00
+                trade.shares_sold = int(line.split()[5])
+                date_str = f"{line.split()[0][:-2]}20{line.split()[0][-2:]}"
+                trade.trade_date = datetime.strptime(date_str, "%m/%d/%Y")
+            if "NET AMOUNT" in line:
+                # 'NET AMOUNT $2,499.48'
+                trade.usd_net_income = cash_float(line.split()[-1])
+        trade.insert_currencies_ratio(*date_to_usd_pln(trade.trade_date))
+        return trade
+    if "Transaction Type: Sold" in text:
+        lines = text.split("\n")
+        trade = Trade()
+        for i, line in enumerate(lines):
+            if "Net Amount" in line:
+                # 'Net Amount $5,805.60'
+                trade.usd_net_income = cash_float(line.split()[-1])
+            if "Trade Date Settlement Date Quantity Price Settlement Amount" in line:
+                # 'Trade Date Settlement Date Quantity Price Settlement Amount'
+                # '02/20/2024 02/22/2024 100 45.00'
+                line_plus_one = lines[i + 1]
+                trade.shares_sold = int(line_plus_one.split()[2])
+                trade.trade_date = datetime.strptime(line_plus_one.split()[0], "%m/%d/%Y")
+        trade.insert_currencies_ratio(*date_to_usd_pln(trade.trade_date))
+        return trade
+
+    return []
 
 
 def process_stock_docs(directory, debug=False):

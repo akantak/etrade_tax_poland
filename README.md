@@ -41,6 +41,12 @@ or pass the directory as an argument (if the statements are in ex. `/tmp/stateme
 python3 -m etrade_tax_poland /tmp/statements
 ```
 
+> Error logs "Advanced encoding /NULL not implemented yet" can be present
+> when parsing new PDF files (starting 2024). It is caused by incorrect
+> metadata in the trade files. I decided to leave it there, instead
+> of disabling logging from PdfReader at all.
+
+
 #### Additional parameter flags
 
 - `-x` - don't compile to xlsx, data would stay in csv files
