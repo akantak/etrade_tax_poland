@@ -21,7 +21,7 @@ dependencies = {file = ["requirements.txt"]}
 where = ["src"]
 
 [tool.setuptools.package-data]
-etrade_tax_poland = ["nbp_cache.json"]
+etrade_tax_poland = ["cache/.nbp_cache.json", "cache/.intc_cache.json"]
 
 [project.urls]
 Homepage = "https://github.com/akantak/etrade_tax_poland"
