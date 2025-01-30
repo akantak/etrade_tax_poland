@@ -1,4 +1,4 @@
-"""Common variables and functions."""
+"""Common maths variables and functions."""
 
 import math
 
